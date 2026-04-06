@@ -25,3 +25,4 @@ dist-ssr
 repomix-output.json
 repomix-output-backend.json
 GEMINI.md
+.env
