@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Alarm {
+  id             Int       @id @default(autoincrement())
+  tag            String
+  alarm          String
+  priority       Int
+  class          Int
+  status         Int
+  timestamp1     DateTime
+  timestamp2     DateTime?
+  acknowledgment Boolean   @default(false)
+
+  @@index([tag, timestamp2])
+  @@index([timestamp1])
+}
+
+model History {
+  id            Int           @id @default(autoincrement())
+  telemetry_id  Int
+  value         Float
+  quality       Int
+  timestamp     DateTime
+  TelemetryData TelemetryData @relation(fields: [telemetry_id], references: [id])
+}
+
+model TelemetryData {
+  id         Int       @id @default(autoincrement())
+  country    String
+  region     String
+  area       String
+  cgs        String
+  station    String
+  compressor String
+  point      String
+  parameter  String
+  tag        String    @unique
+  History    History[]
+}
+
+model EventLog {
+  id         Int       @id(map: "event_logs_pkey") @default(autoincrement())
+  username   String?
+  endpoint   String?
+  method     String?
+  params     Json?
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  request_id String?   @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+}
+
+model TransactionLog {
+  id         Int       @id(map: "transaction_logs_pkey") @default(autoincrement())
+  username   String?
+  endpoint   String?
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  request_id String?   @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+}
+
+model ErrorLog {
+  id         Int       @id(map: "error_logs_pkey") @default(autoincrement())
+  username   String?
+  endpoint   String?
+  error      String?
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  request_id String?   @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+}
