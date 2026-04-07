@@ -15,7 +15,6 @@ export type LiveValueMap = Record<string, {
   quality: number;
   timestamp: string;
 }>;
-
 // Single socket instance shared across the app
 let socket: Socket | null = null;
 

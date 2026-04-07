@@ -6,7 +6,6 @@ const SLICE_NAME = "rawDataSlice";
 
 // --- Thunks ---
 
-
 export const fetchRawData = createCommonAsyncThunk(
   "fetchRawData",
   API_URLS.RAW_DATA,
