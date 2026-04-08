@@ -71,3 +71,291 @@ model ErrorLog {
   created_at DateTime? @default(now()) @db.Timestamp(6)
   request_id String?   @default(dbgenerated("gen_random_uuid()")) @db.Uuid
 }
+
+model Country {
+  id              Int     @id @default(autoincrement())
+  name            String  @unique
+  gas_in          Float?
+  gas_out         Float?
+  avg_shi         Float?
+  online_stations Int?
+  fault_stations  Int?
+  sales_today     Float?
+  revenue_today   Float?
+  total_stations  Int?
+
+  @@map("country")
+}
+
+model Region {
+  id              Int     @id @default(autoincrement())
+  name            String
+  country         String
+  gas_in          Float?
+  gas_out         Float?
+  avg_shi         Float?
+  online_stations Int?
+  fault_stations  Int?
+  sales_today     Float?
+  revenue_today   Float?
+  total_stations  Int?
+
+  @@unique([name, country])
+  @@map("region")
+}
+
+model Area {
+  id              Int     @id @default(autoincrement())
+  name            String
+  region          String
+  country         String
+  gas_in          Float?
+  gas_out         Float?
+  avg_shi         Float?
+  online_stations Int?
+  fault_stations  Int?
+  sales_today     Float?
+  revenue_today   Float?
+  total_stations  Int?
+
+  @@unique([name, region])
+  @@map("area")
+}
+
+model Cgs {
+  id              Int     @id @default(autoincrement())
+  name            String
+  area            String
+  region          String
+  country         String
+  gas_in          Float?
+  gas_out         Float?
+  avg_shi         Float?
+  online_stations Int?
+  fault_stations  Int?
+  sales_today     Float?
+  revenue_today   Float?
+  total_stations  Int?
+
+  @@unique([name, area])
+  @@map("cgs")
+}
+
+model Station {
+  id      Int     @id @default(autoincrement())
+  name    String
+  cgs     String
+  area    String
+  region  String
+  country String
+  gas_in  Float?
+  gas_out Float?
+
+  @@unique([name, cgs])
+  @@map("station")
+}
+
+model Compressor {
+  id      Int     @id @default(autoincrement())
+  name    String
+  station String
+  cgs     String
+  area    String
+  region  String
+  country String
+  gas_in  Float?
+  gas_out Float?
+
+  @@unique([name, station])
+  @@map("compressor")
+}
+
+model Dispenser {
+  id      Int     @id @default(autoincrement())
+  name    String
+  station String
+  cgs     String
+  area    String
+  region  String
+  country String
+  gas_in  Float?
+  gas_out Float?
+
+  @@unique([name, station])
+  @@map("dispenser")
+}
+
+model Device {
+  id      Int     @id @default(autoincrement())
+  name    String
+  station String
+  cgs     String
+  area    String
+  region  String
+  country String
+  gas_in  Float?
+  gas_out Float?
+
+  @@unique([name, station])
+  @@map("device")
+}
+
+model Png {
+  id      Int     @id @default(autoincrement())
+  name    String
+  cgs     String
+  area    String
+  region  String
+  country String
+  gas_in  Float?
+  gas_out Float?
+
+  @@unique([name, cgs])
+  @@map("png")
+}
+
+model Lcng {
+  id      Int     @id @default(autoincrement())
+  name    String
+  cgs     String
+  area    String
+  region  String
+  country String
+  gas_in  Float?
+  gas_out Float?
+
+  @@unique([name, cgs])
+  @@map("lcng")
+}
+
+model Drs {
+  id      Int     @id @default(autoincrement())
+  name    String
+  png     String
+  cgs     String
+  area    String
+  region  String
+  country String
+  gas_in  Float?
+  gas_out Float?
+
+  @@unique([name, png])
+  @@map("drs")
+}
+
+model Industrial {
+  id      Int     @id @default(autoincrement())
+  name    String
+  drs     String
+  png     String
+  cgs     String
+  area    String
+  region  String
+  country String
+  gas_in  Float?
+  gas_out Float?
+
+  @@unique([name, drs])
+  @@map("industrial")
+}
+
+model Commercial {
+  id      Int     @id @default(autoincrement())
+  name    String
+  drs     String
+  png     String
+  cgs     String
+  area    String
+  region  String
+  country String
+  gas_in  Float?
+  gas_out Float?
+
+  @@unique([name, drs])
+  @@map("commercial")
+}
+
+model Domestic {
+  id      Int     @id @default(autoincrement())
+  name    String
+  drs     String
+  png     String
+  cgs     String
+  area    String
+  region  String
+  country String
+  gas_in  Float?
+  gas_out Float?
+
+  @@unique([name, drs])
+  @@map("domestic")
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  email         String         @unique
+  password      String
+  phone         String?
+  is_active     Boolean        @default(true)
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+  role          Role           @relation(fields: [role_id], references: [id])
+  role_id       Int
+  access        UserAccess?
+  refresh_tokens RefreshToken[]
+ 
+  @@map("users")
+}
+
+model Role {
+  id              Int              @id @default(autoincrement())
+  name            String           @unique  // super_admin, admin, manager, engineer, operator
+  users           User[]
+  role_permissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id              Int              @id @default(autoincrement())
+  name            String           @unique  // e.g. create_user, edit_pid, view_schedule
+  description     String?
+  role_permissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  id            Int        @id @default(autoincrement())
+  role          Role       @relation(fields: [role_id], references: [id])
+  role_id       Int
+  permission    Permission @relation(fields: [permission_id], references: [id])
+  permission_id Int
+
+  @@unique([role_id, permission_id])
+  @@map("role_permissions")
+}
+
+model UserAccess {
+  id       Int     @id @default(autoincrement())
+  user     User    @relation(fields: [user_id], references: [id])
+  user_id  Int     @unique
+  level    String  // region_manager, area_manager, station_manager
+  // stores the assigned node names as arrays
+  regions  String[]
+  areas    String[]
+  stations String[]
+
+  @@map("user_access")
+}
+
+model RefreshToken {
+  id         Int      @id @default(autoincrement())
+  token      String   @unique
+  user       User     @relation(fields: [user_id], references: [id])
+  user_id    Int
+  expires_at DateTime
+  created_at DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
