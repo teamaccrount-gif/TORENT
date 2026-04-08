@@ -17,10 +17,11 @@ export const Sidebar: React.FC = () => {
   if (!role) return null;
 
   const perms = PERMISSIONS[role];
+  if (!perms) {
+    console.warn('[SIDEBAR] No permissions found for role:', role);
+    return null;
+  }
   const isFilterActive = location.pathname.startsWith('/filters');
-  const isTablesActive = location.pathname.startsWith('/tables');
-
-  const formatRoleName = (r: string) => r.replace('_', ' ');
 
   return (
     <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex md:flex-col shrink-0 overflow-y-auto">

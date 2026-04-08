@@ -9,19 +9,19 @@ export const fetchLatestValues = createAsyncThunk(
     `${SLICE_NAME}/fetchLatestValues`,
     async (payload: { tags: string[] } | string[], { rejectWithValue }) => {
         try {
-            console.log("[LATEST] Hitting URL:", API_URLS.LATEST);
-            console.log("[LATEST] Sending payload:", JSON.stringify(payload));
+            console.log("[HISTORY][LATEST] Request payload:", payload);
 
             const response = await axios.post<LatestEntry[]>(API_URLS.LATEST, payload);
 
-            console.log("[LATEST] Response status:", response.status);
-            console.log("[LATEST] Response data:", response.data);
+            console.log("[HISTORY][LATEST] Response data:", response.data);
 
             return response.data;
         } catch (error: any) {
-            console.error("[LATEST] Error status:", error.response?.status);
-            console.error("[LATEST] Error message:", error.response?.data);
-            console.error("[LATEST] Full error:", error.message);
+            console.error("[HISTORY][LATEST] Request failed:", {
+                status: error.response?.status,
+                data: error.response?.data,
+                message: error.message,
+            });
             return rejectWithValue(error.message || "Failed to fetch latest values");
         }
     }

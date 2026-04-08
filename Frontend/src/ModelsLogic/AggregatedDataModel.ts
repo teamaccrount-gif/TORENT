@@ -53,11 +53,10 @@ export const fetchAggregatedData = async (params: AggregatedDataParams): Promise
     interval: intervalInSeconds,
   };
 
-  console.log("Fetching AGGREGATED data with payload:", plainParams);
+  console.log("[HISTORY][AGGREGATED] Request payload:", plainParams);
 
   const response = await axios.post<ChartDataResponse>(API_URLS.AGGREGATED_DATA, plainParams);
-
-  console.log("data",response.data)
+  console.log("[HISTORY][AGGREGATED] Response data:", response.data);
 
   return response.data;
 };

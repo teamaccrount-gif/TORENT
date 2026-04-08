@@ -32,13 +32,19 @@ export const Badge: React.FC<BadgeProps> = ({
 // Helper component specifically for Role
 export const RoleBadge: React.FC<{ role: Role }> = ({ role }) => {
   const roleFormat = {
+    ADMIN: { label: 'Admin', variant: 'danger' as const },
     SUPER_ADMIN: { label: 'Super Admin', variant: 'danger' as const },
     REGION_MANAGER: { label: 'Region Manager', variant: 'primary' as const },
     CITY_MANAGER: { label: 'City Manager', variant: 'warning' as const },
     STATION_MANAGER: { label: 'Station Manager', variant: 'success' as const },
   };
 
-  const { label, variant } = roleFormat[role];
+  const normalizedRole = typeof role === 'string' ? role.toUpperCase() : role;
+  const fallback = {
+    label: normalizedRole ? String(normalizedRole).replace(/_/g, ' ') : 'Unknown Role',
+    variant: 'default' as const,
+  };
+  const { label, variant } = roleFormat[normalizedRole as keyof typeof roleFormat] ?? fallback;
   return <Badge variant={variant}>{label}</Badge>;
 };
 

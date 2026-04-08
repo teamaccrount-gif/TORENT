@@ -36,6 +36,12 @@ const Login: React.FC = () => {
         password,
       };
 
+      console.log('[AUTH][LOGIN] Submit clicked:', {
+        email,
+        passwordLength: password.length,
+      });
+      console.log('[AUTH][LOGIN] Dispatch payload:', payload);
+
       const resultAction = await dispatch(
         loginUser({
           method: 'POST',
@@ -43,22 +49,40 @@ const Login: React.FC = () => {
         })
       );
 
+      console.log('[AUTH][LOGIN] Thunk result:', {
+        type: resultAction.type,
+        hasPayload: Boolean((resultAction as any).payload),
+      });
+
       if (loginUser.fulfilled.match(resultAction)) {
-        // Assume backend returns standard ApiResponse<User>
-        const responseData = resultAction.payload as ApiResponse<User>;
-        
-        if (responseData.success && responseData.data) {
-          login(responseData.data);
+        const responseData = resultAction.payload as ApiResponse<User> | { success?: boolean; message?: string; data?: any; user?: User };
+        const responseBody = (responseData as any)?.data ?? responseData;
+        const rawUser =
+          responseBody?.user ??
+          (responseData as any)?.user ??
+          (responseBody?.email && responseBody?.role ? responseBody : null);
+        const userData = rawUser
+          ? { ...rawUser, role: rawUser.role?.toUpperCase() as User['role'] }
+          : null;
+
+        console.log('[AUTH][LOGIN] Fulfilled response:', responseData);
+        console.log('[AUTH][LOGIN] Parsed user data:', userData);
+
+        if ((responseData as any).success !== false && userData) {
+          console.log('[AUTH][LOGIN] Login accepted, storing user and navigating to dashboard.');
+          login(userData as User);
           navigate('/dashboard', { replace: true });
         } else {
-          setErrorMsg(responseData.message || 'Login failed. Invalid credentials.');
+          console.warn('[AUTH][LOGIN] Login rejected by response payload.');
+          setErrorMsg((responseData as any).message || 'Login failed. Invalid credentials.');
         }
       } else {
+        console.error('[AUTH][LOGIN] Login thunk rejected:', resultAction.payload);
         setErrorMsg((resultAction.payload as string) || 'Server error occurred.');
       }
     } catch (err) {
+      console.error('[AUTH][LOGIN] Unexpected error:', err);
       setErrorMsg('An unexpected error occurred during login.');
-      console.error(err);
     } finally {
       setIsLoading(false);
       setPassword(''); // Never store password component state longer than lifecycle

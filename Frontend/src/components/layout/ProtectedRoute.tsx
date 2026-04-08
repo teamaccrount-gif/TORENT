@@ -7,13 +7,20 @@ import type { Role } from '../../types';
 export const ProtectedRoute: React.FC<{ action?: keyof typeof PERMISSIONS[Role] }> = ({ action }) => {
   const { isAuthenticated, role } = useAuth();
   const location = useLocation();
+  const normalizedRole = role ? (role.toUpperCase() as Role) : null;
+  const permissions = normalizedRole ? PERMISSIONS[normalizedRole] : undefined;
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (action && role) {
-    const hasPermission = PERMISSIONS[role][action];
+  if (!permissions) {
+    console.warn('[PROTECTED_ROUTE] Unknown or unsupported role:', role);
+    return <Navigate to="/login" replace />;
+  }
+
+  if (action) {
+    const hasPermission = permissions[action];
     
     let isAllowed = false;
     if (typeof hasPermission === 'boolean') {

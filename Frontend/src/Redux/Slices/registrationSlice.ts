@@ -1,86 +1,71 @@
-import { createAsyncThunk } from '@reduxjs/toolkit';
 import { createCommonAsyncThunk } from '../../utils/ReduxUtils/commonAsyncThunk';
 import { CommonReduxSliceMaker } from '../../utils/ReduxUtils/commonSliceMaker';
 import { API_URLS } from '../../utils/apiUrl';
-import { USE_MOCKS } from '../../config/apiConfig';
-import { MOCK_CITIES, MOCK_STATIONS, mockResponse } from '../../utils/mockData';
 
-const realFetchCities = createCommonAsyncThunk(
+export const fetchCities = createCommonAsyncThunk(
   'fetchCities',
-  API_URLS.FETCH_CITIES,
+  API_URLS.TABLES_AREA,
   'registrationSlice'
 );
 
-const mockFetchCities = createAsyncThunk(
-  'fetchCities',
-  async () => await mockResponse(MOCK_CITIES)
-);
-
-export const fetchCities = USE_MOCKS ? mockFetchCities : (realFetchCities as any);
-
-const realFetchStations = createCommonAsyncThunk(
+export const fetchStations = createCommonAsyncThunk(
   'fetchStations',
-  API_URLS.FETCH_STATIONS,
+  API_URLS.TABLES_STATION,
   'registrationSlice'
 );
 
-const mockFetchStations = createAsyncThunk(
-  'fetchStations',
-  async () => await mockResponse(MOCK_STATIONS)
-);
-
-export const fetchStations = USE_MOCKS ? mockFetchStations : (realFetchStations as any);
-
-const realRegisterRM = createCommonAsyncThunk(
-  'registerRM',
-  API_URLS.REGISTER_RM,
+export const fetchRoles = createCommonAsyncThunk(
+  'fetchRoles',
+  API_URLS.FETCH_ROLES,
   'registrationSlice'
 );
 
-const mockRegisterRM = createAsyncThunk(
-  'registerRM',
-  async (_payload: any) => await mockResponse({ success: true })
-);
-
-export const registerRM = USE_MOCKS ? mockRegisterRM : (realRegisterRM as any);
-
-const realRegisterCM = createCommonAsyncThunk(
-  'registerCM',
-  API_URLS.REGISTER_CM,
+export const fetchRegions = createCommonAsyncThunk(
+  'fetchRegions',
+  API_URLS.TABLES_REGION,
   'registrationSlice'
 );
 
-const mockRegisterCM = createAsyncThunk(
-  'registerCM',
-  async (_payload: any) => await mockResponse({ success: true })
-);
-
-export const registerCM = USE_MOCKS ? mockRegisterCM : (realRegisterCM as any);
-
-const realRegisterSM = createCommonAsyncThunk(
-  'registerSM',
-  API_URLS.REGISTER_SM,
+export const fetchAreas = createCommonAsyncThunk(
+  'fetchAreas',
+  API_URLS.TABLES_AREA,
   'registrationSlice'
 );
 
-const mockRegisterSM = createAsyncThunk(
-  'registerSM',
-  async (_payload: any) => await mockResponse({ success: true })
+export const fetchRegistrationStations = createCommonAsyncThunk(
+  'fetchRegistrationStations',
+  API_URLS.TABLES_STATION,
+  'registrationSlice'
 );
 
-export const registerSM = USE_MOCKS ? mockRegisterSM : (realRegisterSM as any);
+const realAddUser = createCommonAsyncThunk(
+  'addUser',
+  API_URLS.ADD_USER,
+  'registrationSlice'
+);
+export const addUser = realAddUser;
 
 const initialData = {
   fetchCities: null,
   fetchStations: null,
-  registerRM: null,
-  registerCM: null,
-  registerSM: null,
+  fetchRoles: null,
+  fetchRegions: null,
+  fetchAreas: null,
+  fetchRegistrationStations: null,
+  addUser: null,
 };
 
 const registrationSlice = CommonReduxSliceMaker(
   'registrationSlice',
-  { fetchCities, fetchStations, registerRM, registerCM, registerSM },
+  {
+    fetchCities,
+    fetchStations,
+    fetchRoles,
+    fetchRegions,
+    fetchAreas,
+    fetchRegistrationStations,
+    addUser,
+  },
   initialData
 );
 

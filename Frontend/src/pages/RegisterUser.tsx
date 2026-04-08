@@ -6,8 +6,9 @@ import type { Role } from '../types';
 const RegisterUser: React.FC = () => {
   const { role } = useAuth();
   
-  const allowedTargetRoles = useMemo<Role[]>(() => {
+  const allowedTargetRoles = useMemo<Exclude<Role, 'SUPER_ADMIN'>[]>(() => {
     switch (role) {
+      case 'ADMIN':
       case 'SUPER_ADMIN':
         return ['REGION_MANAGER', 'CITY_MANAGER', 'STATION_MANAGER'];
       case 'REGION_MANAGER':
@@ -19,7 +20,7 @@ const RegisterUser: React.FC = () => {
     }
   }, [role]);
 
-  const [selectedTargetRole, setSelectedTargetRole] = useState<Role | null>(
+  const [selectedTargetRole, setSelectedTargetRole] = useState<Exclude<Role, 'SUPER_ADMIN'> | null>(
     allowedTargetRoles.length > 0 ? allowedTargetRoles[0] : null
   );
 

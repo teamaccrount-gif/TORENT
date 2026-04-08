@@ -9,6 +9,20 @@ export interface RolePermissions {
 }
 
 export const PERMISSIONS: Record<Role, RolePermissions> = {
+  ADMIN: {
+    canCreate: ['REGION_MANAGER'],
+    canManage: ['REGION_MANAGER', 'CITY_MANAGER', 'STATION_MANAGER'],
+    canAccessFilters: true,
+    canAccessDashboard: true,
+    allowedTables: ['region', 'area', 'station', 'cgs', 'device', 'png', 'lcng', 'industrial', 'commercial', 'dispenser', 'compressor', 'drs', 'domestic'],
+  },  
+  // MANAGER: {
+  //   canCreate: ['REGION_MANAGER'],
+  //   canManage: ['REGION_MANAGER', 'CITY_MANAGER', 'STATION_MANAGER'],
+  //   canAccessFilters: true,
+  //   canAccessDashboard: true,
+  //   allowedTables: ['region', 'area', 'station', 'cgs', 'device', 'png', 'lcng', 'industrial', 'commercial', 'dispenser', 'compressor', 'drs', 'domestic'],
+  // },
   SUPER_ADMIN: {
     canCreate: ['REGION_MANAGER'],
     canManage: ['REGION_MANAGER', 'CITY_MANAGER', 'STATION_MANAGER'],

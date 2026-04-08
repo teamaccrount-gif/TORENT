@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_BACKEND_ENDPOINT ;
+const API_BASE = import.meta.env.VITE_BACKEND_ENDPOINT;
 
 export const API_URLS = {
   // Tag endpoint - fetches available tags
@@ -18,19 +18,17 @@ export const API_URLS = {
 
   // Auth & Registration endpoints
   LOGIN: `${API_BASE}/api/v1/auth/login`,
-  REGISTER_RM: `${API_BASE}/api/v1/auth/register-rm`,
-  REGISTER_CM: `${API_BASE}/api/v1/auth/register-cm`,
-  REGISTER_SM: `${API_BASE}/api/v1/auth/register-sm`,
-
-  // Meta endpoints for assignments
-  FETCH_CITIES: `${API_BASE}/api/v1/meta/cities`,
-  FETCH_STATIONS: `${API_BASE}/api/v1/meta/stations`,
+  REFRESH: `${API_BASE}/api/v1/auth/refresh`,
+  LOGOUT: `${API_BASE}/api/v1/auth/logout`,
+  FETCH_ROLES: `${API_BASE}/api/v1/users/role`,
+  
+  ADD_USER: `${API_BASE}/api/v1/users`,
 
   // Management endpoints
-  FETCH_USERS: `${API_BASE}/api/v1/manage/users`,
-  FETCH_USER_DETAIL: `${API_BASE}/api/v1/manage/users/detail`,
-  UPDATE_USER: `${API_BASE}/api/v1/manage/users/update`,
-  TOGGLE_USER_STATUS: `${API_BASE}/api/v1/manage/users/toggle-status`,
+  FETCH_USERS: `${API_BASE}/api/v1/users`,
+  FETCH_USER_DETAIL: `${API_BASE}/api/v1/users`,
+  UPDATE_USER: `${API_BASE}/api/v1/users`,
+  DELETE_USER: `${API_BASE}/api/v1/users`,
 
   // Tables endpoints
   TABLES_COUNTRY: `${API_BASE}/api/v1/tables/country`,

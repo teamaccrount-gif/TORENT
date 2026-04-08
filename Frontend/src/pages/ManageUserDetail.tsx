@@ -48,7 +48,7 @@ const ManageUserDetail: React.FC = () => {
     setSavingMsg('');
     
     const resultAction = await dispatch(updateUser({
-      method: 'POST',
+      method: 'PUT',
       payload: { userId, name, phone }
     }));
     
@@ -68,7 +68,7 @@ const ManageUserDetail: React.FC = () => {
     setSavingMsg('');
     
     const resultAction = await dispatch(toggleUserStatus({
-      method: 'POST',
+      method: 'PUT',
       payload: { userId, isActive: !user.isActive }
     }));
     

@@ -2,9 +2,22 @@ import React from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { RoleBadge } from '../ui/Badge';
 import { Button } from '../ui/Button';
+import { useAppDispatch } from '../../Redux/Store';
+import { logoutUser } from '../../Redux/Slices/authSlice';
 
 export const Navbar: React.FC = () => {
   const { user, role, logout } = useAuth();
+  const dispatch = useAppDispatch();
+  const handleLogout = async () => {
+    const refreshToken = localStorage.getItem('refresh_token');
+    try {
+      await dispatch(logoutUser({ method: 'POST', payload: { refresh_token: refreshToken } }));
+    } finally {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refresh_token');
+      logout();
+    }
+  };
 
   return (
     <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 shrink-0">
@@ -12,14 +25,14 @@ export const Navbar: React.FC = () => {
         <span className="text-xl font-bold text-blue-600">Torent</span>
       </div>
       <div className="flex-1 md:flex-none"></div>
-      
+
       {user && role && (
         <div className="flex items-center space-x-4">
           <div className="hidden sm:flex flex-col items-end">
             <span className="text-sm font-medium text-gray-900">{user.email}</span>
             <RoleBadge role={role} />
           </div>
-          <Button variant="secondary" onClick={logout} className="text-xs py-1.5 px-3">
+          <Button variant="secondary" onClick={handleLogout} className="text-xs py-1.5 px-3">
             Logout
           </Button>
         </div>

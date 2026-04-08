@@ -1,86 +1,85 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { createCommonAsyncThunk } from '../../utils/ReduxUtils/commonAsyncThunk';
+import axios from 'axios';
 import { CommonReduxSliceMaker } from '../../utils/ReduxUtils/commonSliceMaker';
 import { API_URLS } from '../../utils/apiUrl';
-import { USE_MOCKS } from '../../config/apiConfig';
-import { MOCK_USERS, mockResponse } from '../../utils/mockData';
 
-const realFetchUsers = createCommonAsyncThunk(
+export const fetchUsers = createAsyncThunk(
   'fetchUsers',
-  API_URLS.FETCH_USERS,
-  'manageSlice'
-);
-
-const mockFetchUsers = createAsyncThunk(
-  'fetchUsers',
-  async (options: any) => {
-    const page = options?.params?.page || 1;
-    const limit = options?.params?.limit || 10;
-    return await mockResponse({
-      items: MOCK_USERS,
-      total: MOCK_USERS.length,
-      page,
-      limit,
-      totalPages: 1
-    });
+  async (options: { method?: 'GET'; params?: { page?: number; limit?: number } } | undefined, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(API_URLS.FETCH_USERS, {
+        params: options?.params,
+      });
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error?.response?.data?.message || error.message || 'Failed to fetch users');
+    }
   }
 );
 
-export const fetchUsers = USE_MOCKS ? mockFetchUsers : (realFetchUsers as any);
-
-const realFetchUserDetail = createCommonAsyncThunk(
+export const fetchUserDetail = createAsyncThunk(
   'fetchUserDetail',
-  API_URLS.FETCH_USER_DETAIL,
-  'manageSlice'
-);
-
-const mockFetchUserDetail = createAsyncThunk(
-  'fetchUserDetail',
-  async (options: any) => {
-    const userId = options?.params?.userId;
-    const user = MOCK_USERS.find(u => u.id === userId) || MOCK_USERS[0];
-    return await mockResponse(user);
+  async (options: { method?: 'GET'; params?: { userId?: string } } | undefined, { rejectWithValue }) => {
+    try {
+      const userId = options?.params?.userId;
+      const response = await axios.get(`${API_URLS.FETCH_USER_DETAIL}/${userId}`);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error?.response?.data?.message || error.message || 'Failed to fetch user detail');
+    }
   }
 );
 
-export const fetchUserDetail = USE_MOCKS ? mockFetchUserDetail : (realFetchUserDetail as any);
-
-const realUpdateUser = createCommonAsyncThunk(
+export const updateUser = createAsyncThunk(
   'updateUser',
-  API_URLS.UPDATE_USER,
-  'manageSlice'
+  async (options: { method?: 'PUT'; payload?: { userId?: string; name?: string; phone?: string } } | undefined, { rejectWithValue }) => {
+    try {
+      const userId = options?.payload?.userId;
+      const response = await axios.put(`${API_URLS.UPDATE_USER}/${userId}`, options?.payload);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error?.response?.data?.message || error.message || 'Failed to update user');
+    }
+  }
 );
 
-const mockUpdateUser = createAsyncThunk(
-  'updateUser',
-  async (_payload: any) => await mockResponse({ success: true })
-);
-
-export const updateUser = USE_MOCKS ? mockUpdateUser : (realUpdateUser as any);
-
-const realToggleUserStatus = createCommonAsyncThunk(
+export const toggleUserStatus = createAsyncThunk(
   'toggleUserStatus',
-  API_URLS.TOGGLE_USER_STATUS,
-  'manageSlice'
+  async (options: { method?: 'PUT'; payload?: { userId?: string; isActive?: boolean } } | undefined, { rejectWithValue }) => {
+    try {
+      const userId = options?.payload?.userId;
+      const response = await axios.put(`${API_URLS.UPDATE_USER}/${userId}`, options?.payload);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error?.response?.data?.message || error.message || 'Failed to update user status');
+    }
+  }
 );
 
-const mockToggleUserStatus = createAsyncThunk(
-  'toggleUserStatus',
-  async (_payload: any) => await mockResponse({ success: true })
+export const deleteUser = createAsyncThunk(
+  'deleteUser',
+  async (options: { method?: 'DELETE'; payload?: { userId?: string } } | undefined, { rejectWithValue }) => {
+    try {
+      const userId = options?.payload?.userId;
+      const response = await axios.delete(`${API_URLS.DELETE_USER}/${userId}`);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error?.response?.data?.message || error.message || 'Failed to delete user');
+    }
+  }
 );
-
-export const toggleUserStatus = USE_MOCKS ? mockToggleUserStatus : (realToggleUserStatus as any);
 
 const initialData = {
   fetchUsers: null,
   fetchUserDetail: null,
   updateUser: null,
   toggleUserStatus: null,
+  deleteUser: null,
 };
 
 const manageSlice = CommonReduxSliceMaker(
   'manageSlice',
-  { fetchUsers, fetchUserDetail, updateUser, toggleUserStatus },
+  { fetchUsers, fetchUserDetail, updateUser, toggleUserStatus, deleteUser },
   initialData
 );
 

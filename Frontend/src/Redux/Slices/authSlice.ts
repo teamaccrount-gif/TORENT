@@ -1,30 +1,30 @@
-import { createAsyncThunk } from '@reduxjs/toolkit';
 import { createCommonAsyncThunk } from '../../utils/ReduxUtils/commonAsyncThunk';
 import { CommonReduxSliceMaker } from '../../utils/ReduxUtils/commonSliceMaker';
 import { API_URLS } from '../../utils/apiUrl';
-import { USE_MOCKS } from '../../config/apiConfig';
-import { getMockUserByEmail, mockResponse } from '../../utils/mockData';
-
-const realLoginUser = createCommonAsyncThunk(
+export const loginUser = createCommonAsyncThunk(
   'loginUser',
-  (API_URLS as any).LOGIN || '',
+  API_URLS.LOGIN,
   'authSlice'
 );
 
-const mockLoginUser = createAsyncThunk(
-  'loginUser',
-  async (payload: any) => {
-    const user = getMockUserByEmail(payload.payload.email);
-    return await mockResponse(user);
-  }
+export const refreshSession = createCommonAsyncThunk(
+  'refreshSession',
+  API_URLS.REFRESH,
+  'authSlice'
 );
 
-export const loginUser = USE_MOCKS ? mockLoginUser : (realLoginUser as any);
+export const logoutUser = createCommonAsyncThunk(
+  'logoutUser',
+  API_URLS.LOGOUT,
+  'authSlice'
+);
 
 const initialData = {
   loginUser: null,
+  refreshSession: null,
+  logoutUser: null,
 };
 
-const authSlice = CommonReduxSliceMaker('authSlice', { loginUser }, initialData);
+const authSlice = CommonReduxSliceMaker('authSlice', { loginUser, refreshSession, logoutUser }, initialData);
 
 export default authSlice.reducer;

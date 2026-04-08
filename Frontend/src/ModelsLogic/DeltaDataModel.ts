@@ -53,11 +53,10 @@ export const fetchDeltaData = async (params: DeltaDataParams): Promise<ChartData
     interval: intervalInSeconds,
   };
 
-  console.log("Fetching DELTA data with payload:", plainParams);
+  console.log("[HISTORY][DELTA] Request payload:", plainParams);
 
   const response = await axios.post<ChartDataResponse>(API_URLS.DELTA_DATA, plainParams);
-
-  console.log("data", response.data)
+  console.log("[HISTORY][DELTA] Response data:", response.data);
   return response.data;
 };
     

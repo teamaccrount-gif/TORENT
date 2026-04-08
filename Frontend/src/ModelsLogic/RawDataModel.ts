@@ -33,15 +33,9 @@ export interface RawDataParams {
 
 
 export const fetchTags = async (): Promise<TableRow[]> => {
-
-  console.log("coming...: ")
   const response = await axios.get(API_URLS.TAGS);
-
-  console.log("response: ", response)
-
   const data = response.data;
-
-  console.log('tags data', data);
+  console.log("[HISTORY][TAGS] Response data:", data);
 
   // If data is already an array of tags, return it directly
   if (Array.isArray(data)) {
@@ -68,9 +62,10 @@ export const fetchRawData = async (params: RawDataParams): Promise<ChartDataResp
     end: endISO,
   };
 
-  console.log("Fetching RAW data with payload:", plainParams);
+  console.log("[HISTORY][RAW] Request payload:", plainParams);
 
   const response = await axios.post<ChartDataResponse>(API_URLS.RAW_DATA, plainParams);
+  console.log("[HISTORY][RAW] Response data:", response.data);
 
   return response.data;
 };

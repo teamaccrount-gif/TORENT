@@ -1,7 +1,7 @@
-export type Role = 'SUPER_ADMIN' | 'REGION_MANAGER' | 'CITY_MANAGER' | 'STATION_MANAGER';
+export type Role = 'ADMIN' | 'SUPER_ADMIN' | 'REGION_MANAGER' | 'CITY_MANAGER' | 'STATION_MANAGER';
 
 export interface User {
-  id: string;
+  id: string | number;
   email: string;
   phone: string;
   role: Role;
@@ -24,6 +24,28 @@ export interface City {
 export interface Station {
   station_id: string;
   station_name: string;
+}
+
+export interface RoleOption {
+  role_id: string;
+  role_name: string;
+}
+
+export interface RegionOption {
+  region_id: string;
+  region_name: string;
+}
+
+export interface AreaOption {
+  area_id: string;
+  area_name: string;
+  region_name: string;
+}
+
+export interface RegistrationStationOption {
+  station_id: string;
+  station_name: string;
+  area_name: string;
 }
 
 export interface ApiResponse<T> {
@@ -52,11 +74,22 @@ export interface AuthContextType {
   logout: () => void;
 }
 
+export type RegistrationAccessLevel = 'region_level' | 'city_level' | 'station_level';
+
+export interface RegistrationAccessPayload {
+  level: RegistrationAccessLevel;
+  regions: string[];
+  areas: string[];
+  stations: string[];
+}
+
 export interface RegistrationPayload {
   email: string;
-  password?: string;
+  password: string;
   phone: string;
-  role: Role;
-  assigned_city_ids?: string[];
-  assigned_station_id?: string;
+  role_id: number;
+  level: RegistrationAccessLevel;
+  regions: string[];
+  areas: string[];
+  stations: string[];
 }
