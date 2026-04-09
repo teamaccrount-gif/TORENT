@@ -1,4 +1,4 @@
-import axios from "axios";
+import axiosInstance from "../utils/axiosInstance";
 import API_URLS from "../utils/apiUrl";
 
 export interface TableRow {
@@ -33,7 +33,7 @@ export interface RawDataParams {
 
 
 export const fetchTags = async (): Promise<TableRow[]> => {
-  const response = await axios.get(API_URLS.TAGS);
+  const response = await axiosInstance.get(API_URLS.TAGS);
   const data = response.data;
   console.log("[HISTORY][TAGS] Response data:", data);
 
@@ -60,11 +60,13 @@ export const fetchRawData = async (params: RawDataParams): Promise<ChartDataResp
     tags: params.tags,
     start: startISO,
     end: endISO,
+    start_time: startISO,
+    end_time: endISO,
   };
 
   console.log("[HISTORY][RAW] Request payload:", plainParams);
 
-  const response = await axios.post<ChartDataResponse>(API_URLS.RAW_DATA, plainParams);
+  const response = await axiosInstance.post<ChartDataResponse>(API_URLS.RAW_DATA, plainParams);
   console.log("[HISTORY][RAW] Response data:", response.data);
 
   return response.data;

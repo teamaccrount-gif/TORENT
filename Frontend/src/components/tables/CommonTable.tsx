@@ -22,14 +22,14 @@ export const CommonTable: React.FC<CommonTableProps> = ({ type, data, loading })
         title: 'Gas In',
         dataIndex: 'gas_in',
         key: 'gas_in',
-        render: (val) => <span className="font-mono text-blue-600 font-medium">{val.toLocaleString()}</span>,
+        render: (val) => <span className="font-mono text-blue-600 font-medium">{val?.toLocaleString() ?? '0'}</span>,
         sorter: (a, b) => a.gas_in - b.gas_in,
       },
       {
         title: 'Gas Out',
         dataIndex: 'gas_out',
         key: 'gas_out',
-        render: (val) => <span className="font-mono text-green-600 font-medium">{val.toLocaleString()}</span>,
+        render: (val) => <span className="font-mono text-green-600 font-medium">{val?.toLocaleString() ?? '0'}</span>,
         sorter: (a, b) => a.gas_out - b.gas_out,
       },
     ];

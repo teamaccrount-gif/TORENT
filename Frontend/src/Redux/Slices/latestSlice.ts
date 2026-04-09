@@ -1,7 +1,7 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import axiosInstance from "../../utils/axiosInstance";
 import { API_URLS } from "../../utils/apiUrl";
 import type { LatestEntry } from "../../ModelsLogic/RawDataModel";
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
 const SLICE_NAME = "latestSlice";
 
@@ -11,7 +11,7 @@ export const fetchLatestValues = createAsyncThunk(
         try {
             console.log("[HISTORY][LATEST] Request payload:", payload);
 
-            const response = await axios.post<LatestEntry[]>(API_URLS.LATEST, payload);
+            const response = await axiosInstance.post<LatestEntry[]>(API_URLS.LATEST, payload);
 
             console.log("[HISTORY][LATEST] Response data:", response.data);
 

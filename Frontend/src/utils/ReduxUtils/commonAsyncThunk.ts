@@ -30,7 +30,7 @@ export const createCommonAsyncThunk = (
 ) =>
   createAsyncThunk(
     typePrefix,
-    async (options: RequestOptions, { rejectWithValue, getState, requestId }) => {
+    async (options: RequestOptions | void, { rejectWithValue, getState, requestId }) => {
       try {
         // Duplicate request guard — ignore if another request is already pending
         const state = (getState() as any)[sliceName];

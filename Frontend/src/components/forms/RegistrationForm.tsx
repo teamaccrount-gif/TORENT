@@ -14,6 +14,7 @@ import { Button } from '../ui/Button';
 import { Dropdown } from '../ui/Dropdown';
 import { MultiSelectDropdown } from '../ui/MultiSelectDropdown';
 import { FormField } from '../ui/FormField';
+import { Input } from '../ui/Input';
 import type {
   ApiResponse,
   AreaOption,
@@ -39,6 +40,8 @@ interface RegistrationFormProps {
 export const RegistrationForm: React.FC<RegistrationFormProps> = ({ targetRole }) => {
   const dispatch = useAppDispatch();
 
+  const [first_name, setFirstName] = useState('');
+  const [last_name, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
@@ -183,6 +186,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ targetRole }
     const selectedAccessLevel = ROLE_LEVEL_MAP[targetRole];
     const selectedAreasForPayload = selectedAreaRecords.map((area) => area.area_name);
     const payload: RegistrationPayload = {
+      first_name,
+      last_name,
       email,
       password,
       phone,
@@ -214,6 +219,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ targetRole }
 
         if (responseData?.success !== false) {
           setSuccessMsg(`Successfully registered ${targetRole.replace('_', ' ')}.`);
+          setFirstName('');
+          setLastName('');
           setEmail('');
           setPassword('');
           setPhone('');
@@ -271,6 +278,32 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ targetRole }
       </div>
 
       <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+        <div>
+          <FormField label="First Name" htmlFor="first_name">
+            <Input
+              id="first_name"
+              value={first_name}
+              onChange={(e) => setFirstName(e.target.value)}
+              required
+              disabled={isSubmitting}
+              placeholder="First name"
+            />
+          </FormField>
+        </div>
+
+        <div>
+          <FormField label="Last Name" htmlFor="last_name">
+            <Input
+              id="last_name"
+              value={last_name}
+              onChange={(e) => setLastName(e.target.value)}
+              required
+              disabled={isSubmitting}
+              placeholder="Last name"
+            />
+          </FormField>
+        </div>
+
         <div className="sm:col-span-2">
           <EmailField
             value={email}

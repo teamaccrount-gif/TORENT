@@ -100,14 +100,24 @@ const normalizePoint = (value: unknown): TelemetryPoint | null => {
     'created_at',
     'createdAt',
     'ts',
+    'interval_start',
+    'intervalStart',
+    'start_time',
+    'startTime',
   ]);
 
   const numericValue = getNumericValue(value, [
     'value',
     'val',
     'reading',
+    'reading_value',
     'measurement',
     'y',
+    'average',
+    'avg',
+    'avg_value',
+    'result',
+    'sum',
   ]);
 
   if (!timestamp || numericValue === null) {

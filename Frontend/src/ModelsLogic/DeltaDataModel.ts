@@ -1,4 +1,4 @@
-import axios from "axios";
+import axiosInstance from "../utils/axiosInstance";
 import API_URLS from "../utils/apiUrl";
 
 export interface ChartDataResponse {
@@ -50,12 +50,14 @@ export const fetchDeltaData = async (params: DeltaDataParams): Promise<ChartData
     tags: params.tags,
     start: startISO,
     end: endISO,
+    start_time: startISO,
+    end_time: endISO,
     interval: intervalInSeconds,
   };
 
   console.log("[HISTORY][DELTA] Request payload:", plainParams);
 
-  const response = await axios.post<ChartDataResponse>(API_URLS.DELTA_DATA, plainParams);
+  const response = await axiosInstance.post<ChartDataResponse>(API_URLS.DELTA_DATA, plainParams);
   console.log("[HISTORY][DELTA] Response data:", response.data);
   return response.data;
 };

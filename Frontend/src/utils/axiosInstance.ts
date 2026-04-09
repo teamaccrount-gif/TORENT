@@ -1,24 +1,20 @@
 import axios, { AxiosError, AxiosHeaders, type AxiosRequestConfig } from 'axios';
+import { API_URLS } from './apiUrl';
 
 const axiosInstance = axios.create();
-
-const LOGIN_ENDPOINT = '/api/v1/auth/login';
-const REFRESH_ENDPOINT = '/api/v1/auth/refresh';
-const API_BASE_URL = import.meta.env.VITE_BACKEND_ENDPOINT ?? '';
-
-const buildApiUrl = (path: string) => `${API_BASE_URL.replace(/\/$/, '')}${path}`;
 
 const isAuthEndpoint = (url?: string | null) => {
   if (!url) {
     return false;
   }
 
-  return url.includes(LOGIN_ENDPOINT) || url.includes(REFRESH_ENDPOINT);
+  return url.includes('/api/v1/auth/login') || url.includes('/api/v1/auth/refresh');
 };
 
-const getAccessToken = () => localStorage.getItem('accessToken');
-const getRefreshToken = () => localStorage.getItem('refresh_token');
-
+const getAccessToken = () =>
+  localStorage.getItem('accessToken') 
+const getRefreshToken = () =>
+  localStorage.getItem('refresh_token')
 const clearAuthState = () => {
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refresh_token');
@@ -33,7 +29,7 @@ const dispatchLogout = () => {
 const extractAccessToken = (payload: unknown): string | null => {
   if (!payload || typeof payload !== 'object') {
     return null;
-  }
+  }     
 
   const data = payload as Record<string, unknown>;
   const nestedData = data.data;
@@ -120,11 +116,12 @@ axiosInstance.interceptors.response.use(
     }
 
     try {
-      const refreshResponse = await axios.post(buildApiUrl(REFRESH_ENDPOINT), {
+      const refreshResponse = await axios.post(API_URLS.REFRESH, {
         refresh_token: refreshToken,
       });
 
       const newAccessToken = extractAccessToken(refreshResponse.data);
+      const newRefreshToken = extractRefreshToken(refreshResponse.data);
 
       if (!newAccessToken) {
         clearAuthState();
@@ -133,6 +130,10 @@ axiosInstance.interceptors.response.use(
       }
 
       localStorage.setItem('accessToken', newAccessToken);
+      if (newRefreshToken) {
+        localStorage.setItem('refresh_token', newRefreshToken);
+      }
+
       const retryHeaders = AxiosHeaders.from(originalRequest.headers as any);
       retryHeaders.set('Authorization', `Bearer ${newAccessToken}`);
       originalRequest.headers = retryHeaders;

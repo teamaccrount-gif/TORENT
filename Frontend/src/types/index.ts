@@ -4,16 +4,20 @@ export interface User {
   id: string | number;
   email: string;
   phone: string;
-  role: Role;
-  name?: string;
-  isActive: boolean;
+  role: Role | { name: string };
+  first_name?: string;
+  last_name?: string;
+  isActive?: boolean;
+  is_active?: boolean;
   assignedCities?: City[];
   assignedStation?: Station;
 }
 
 export interface ManageableUser extends User {
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  createdAt?: string;
+  updatedAt?: string;
+  access: RegistrationAccessPayload | null;
 }
 
 export interface City {
@@ -84,6 +88,8 @@ export interface RegistrationAccessPayload {
 }
 
 export interface RegistrationPayload {
+  first_name: string;
+  last_name: string;
   email: string;
   password: string;
   phone: string;

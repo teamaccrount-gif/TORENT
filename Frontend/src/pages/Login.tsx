@@ -14,7 +14,8 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
+
+
   const { login } = useAuth();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -100,7 +101,7 @@ const Login: React.FC = () => {
             Enter your credentials to access your dashboard
           </p>
         </div>
-        
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4 rounded-md shadow-sm p-4">
             <FormField label="Email Address">
