@@ -94,7 +94,7 @@ export const getDelta = async (req, res) => {
     }
 
     const result = await prisma.$queryRaw`
-      SELECT * FROM delta_multi(
+      SELECT * FROM delta_filter_multi(
         ${tags}::text[],
         ${new Date(start)},
         ${new Date(end)},

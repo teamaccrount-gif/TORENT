@@ -71,6 +71,7 @@ export const login = async (req, res) => {
         refresh_token: refreshToken,
         user: {
           id:          user.id,
+          full_name:   `${user.first_name} ${user.last_name}`,
           email:       user.email,
           phone:       user.phone,
           role:        user.role.name,
@@ -79,6 +80,7 @@ export const login = async (req, res) => {
         },
       },
     });
+
   } catch (err) {
     await logError(req, err);
     res.status(500).json({ success: false, error: err.message });
@@ -154,7 +156,7 @@ export const logout = async (req, res) => {
     await prisma.refreshToken.delete({
       where: { token: refresh_token },
     });
-
+ 
     res.status(200).json({ success: true, message: "Logged out successfully" });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
