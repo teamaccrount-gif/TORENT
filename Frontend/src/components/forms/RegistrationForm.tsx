@@ -34,7 +34,7 @@ import {
 } from '../../utils/registrationHelpers';
 
 interface RegistrationFormProps {
-  targetRole: Exclude<Role, 'SUPER_ADMIN'>;
+  targetRole: Exclude<Role, 'super admin'>;
 }
 
 export const RegistrationForm: React.FC<RegistrationFormProps> = ({ targetRole }) => {
@@ -97,7 +97,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ targetRole }
   const selectedStation = stations.find((station) => station.station_id === selectedStationId) || null;
 
   const visibleStations = useMemo(() => {
-    if (targetRole !== 'STATION_MANAGER' || selectedAreaNames.length === 0) {
+    if (targetRole !== 'operator' || selectedAreaNames.length === 0) {
       return [];
     }
 
@@ -153,7 +153,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ targetRole }
   const handleAreaChange = (value: string[] | string) => {
     const nextValue = Array.isArray(value) ? value : [value];
     setSelectedAreaIds(nextValue);
-    if (targetRole === 'STATION_MANAGER') {
+    if (targetRole === 'operator') {
       setSelectedStationId('');
     }
   };
@@ -174,11 +174,11 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ targetRole }
     }
 
     if (selectedAreaIds.length === 0) {
-      setErrorMsg(targetRole === 'REGION_MANAGER' ? 'Please select at least one city.' : 'Please select a city.');
+      setErrorMsg(targetRole === 'manager' ? 'Please select at least one city.' : 'Please select a city.');
       return;
     }
 
-    if (targetRole === 'STATION_MANAGER' && !selectedStation) {
+    if (targetRole === 'operator' && !selectedStation) {
       setErrorMsg('Please select a station.');
       return;
     }
@@ -193,9 +193,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ targetRole }
       phone,
       role_id: Number(selectedRole.role_id),
       level: selectedAccessLevel,
-      regions: targetRole === 'REGION_MANAGER' ? [selectedRegion.region_name] : [],
-      areas: targetRole === 'REGION_MANAGER' || targetRole === 'CITY_MANAGER' ? (targetRole === 'REGION_MANAGER' ? selectedAreasForPayload : [selectedAreasForPayload[0]].filter(Boolean)) : [],
-      stations: targetRole === 'STATION_MANAGER' && selectedStation ? [selectedStation.station_name] : [],
+      regions: targetRole === 'manager' ? [selectedRegion.region_name] : [],
+      areas: targetRole === 'manager' || targetRole === 'engineer' ? (targetRole === 'manager' ? selectedAreasForPayload : [selectedAreasForPayload[0]].filter(Boolean)) : [],
+      stations: targetRole === 'operator' && selectedStation ? [selectedStation.station_name] : [],
     };
 
     console.log(localStorage.getItem('accessToken'));
@@ -360,7 +360,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ targetRole }
           </FormField>
         </div>
 
-        {selectedRegion && targetRole !== 'REGION_MANAGER' && (
+        {selectedRegion && targetRole !== 'manager' && (
           <div className="sm:col-span-2">
             <FormField label="City" htmlFor="area">
               <Dropdown
@@ -376,7 +376,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ targetRole }
           </div>
         )}
 
-        {selectedRegion && targetRole === 'REGION_MANAGER' && (
+        {selectedRegion && targetRole === 'manager' && (
           <div className="sm:col-span-2">
             <FormField label="Cities" htmlFor="areas">
               <MultiSelectDropdown
@@ -391,7 +391,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ targetRole }
           </div>
         )}
 
-        {selectedRegion && targetRole === 'STATION_MANAGER' && selectedAreaIds.length > 0 && (
+        {selectedRegion && targetRole === 'operator' && selectedAreaIds.length > 0 && (
           <div className="sm:col-span-2">
             <FormField label="Station" htmlFor="station">
               <Dropdown

@@ -100,6 +100,7 @@ const normalizePoint = (value: unknown): TelemetryPoint | null => {
     'created_at',
     'createdAt',
     'ts',
+    'bucket',
     'interval_start',
     'intervalStart',
     'start_time',
@@ -112,6 +113,7 @@ const normalizePoint = (value: unknown): TelemetryPoint | null => {
     'reading',
     'reading_value',
     'measurement',
+    'delta',
     'y',
     'average',
     'avg',
@@ -197,6 +199,12 @@ const normalizeTelemetryData = (value: unknown): Record<string, TelemetryPoint[]
   };
 
   if (Array.isArray(normalizedValue)) {
+    // If the whole array is a list of points (e.g. [{"bucket":...}, {"bucket":...}])
+    if (isPointLikeArray(normalizedValue)) {
+      addSeriesPoints('Telemetry', normalizedValue);
+      return result;
+    }
+
     normalizedValue.forEach((item, index) => {
       if (isRecord(item)) {
         const tag = getStringValue(item, ['tag', 'name', 'series', 'metric', 'key', 'label']) || `series-${index + 1}`;
@@ -290,7 +298,61 @@ export const DataVisualizer: React.FC<DataVisualizerProps> = ({ data, loading })
       });
     });
     return flat.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  }, [data, tags]);
+  }, [actualData, tags]);
+
+  // Generic fallback data for when timeseries normalization fails or for raw inspection
+  const genericData = useMemo(() => {
+    const unwrapped = unwrapTelemetryPayload(data);
+    if (Array.isArray(unwrapped)) return unwrapped;
+    
+    // If it's an object of arrays, flatten it
+    if (isRecord(unwrapped)) {
+      const flattened: any[] = [];
+      Object.entries(unwrapped).forEach(([key, val]) => {
+        if (Array.isArray(val)) {
+          val.forEach((item, idx) => {
+            if (isRecord(item)) {
+              flattened.push({ _source_tag: key, _row_index: idx, ...item });
+            } else {
+              flattened.push({ _source_tag: key, _row_index: idx, value: val });
+            }
+          });
+        }
+      });
+      return flattened;
+    }
+    
+    return isRecord(unwrapped) ? [unwrapped] : [];
+  }, [data]);
+
+  const genericColumns = useMemo(() => {
+    if (genericData.length === 0) return [];
+    
+    // Get all unique keys from first 10 rows to build columns
+    const keys = new Set<string>();
+    genericData.slice(0, 10).forEach(row => {
+      if (isRecord(row)) {
+        Object.keys(row).forEach(k => keys.add(k));
+      }
+    });
+
+    return Array.from(keys).map(key => ({
+      title: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+      dataIndex: key,
+      key: key,
+      ellipsis: true,
+      render: (val: any) => {
+        if (typeof val === 'object' && val !== null) return JSON.stringify(val);
+        return String(val ?? '');
+      },
+      sorter: (a: any, b: any) => {
+        const valA = a[key];
+        const valB = b[key];
+        if (typeof valA === 'number' && typeof valB === 'number') return valA - valB;
+        return String(valA).localeCompare(String(valB));
+      }
+    }));
+  }, [genericData]);
 
   const columns = [
     {
@@ -325,79 +387,98 @@ export const DataVisualizer: React.FC<DataVisualizerProps> = ({ data, loading })
     </div>
   );
 
-  if (tags.length === 0) {
-    console.error('[HISTORY][VISUALIZER] No plottable tag arrays found in response.', {
-      rawData: data,
-      actualData,
-      shape: dataShape,
-    });
+  const hasPlottableData = tags.length > 0;
 
-    return (
-      <div className="mt-8 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-        History data was fetched, but the response format is not chart-compatible. Check the console for the backend payload and parsed shape.
-      </div>
-    );
-  }
+  const tabItems = [
+    {
+      key: 'chart',
+      label: 'Visual Trend',
+      disabled: !hasPlottableData,
+      children: hasPlottableData ? (
+        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm h-[400px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+              <XAxis 
+                dataKey="timestamp" 
+                tickFormatter={(ts) => new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                tick={{ fontSize: 10 }}
+                stroke="#94a3b8"
+              />
+              <YAxis tick={{ fontSize: 10 }} stroke="#94a3b8" />
+              <Tooltip 
+                labelFormatter={(ts) => new Date(ts).toLocaleString()}
+                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+              />
+              <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
+              {tags.map((tag, idx) => (
+                <Line
+                  key={tag}
+                  type="monotone"
+                  dataKey={tag}
+                  stroke={COLORS[idx % COLORS.length]}
+                  strokeWidth={2.5}
+                  dot={{ r: 4, strokeWidth: 2, fill: '#fff' }}
+                  activeDot={{ r: 6, strokeWidth: 0 }}
+                  animationDuration={1000}
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      ) : (
+        <div className="h-64 flex flex-col items-center justify-center bg-gray-50 rounded-xl border border-dashed border-gray-200 p-8 text-center">
+          <p className="text-gray-500 font-medium">No plottable time-series found.</p>
+          <p className="text-xs text-gray-400 mt-2 max-w-xs">
+            Data was received, but columns like "timestamp" or "value" were missing. Please check the "Raw Data" tab.
+          </p>
+        </div>
+      )
+    },
+    {
+      key: 'table',
+      label: 'Data Log',
+      disabled: !hasPlottableData,
+      children: (
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <Table 
+            dataSource={tableData} 
+            columns={columns} 
+            pagination={{ pageSize: 15 }}
+            size="middle"
+          />
+        </div>
+      )
+    },
+    {
+      key: 'raw',
+      label: 'Raw Data',
+      children: (
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="px-6 py-3 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center text-xs text-gray-500">
+            <span>Dynamic inspection of backend payload</span>
+            <span className="font-mono">{genericData.length} records found</span>
+          </div>
+          <Table 
+            dataSource={genericData} 
+            columns={genericColumns} 
+            pagination={{ pageSize: 15 }}
+            size="small"
+            scroll={{ x: 'max-content' }}
+            rowKey={(record, idx) => record.id ?? record._row_index ?? idx}
+          />
+        </div>
+      )
+    }
+  ];
 
   return (
-    <div className="mt-8 space-y-6">
+    <div className="mt-8 space-y-6 text-gray-900">
       <Tabs
-        defaultActiveKey="chart"
+        defaultActiveKey={hasPlottableData ? "chart" : "raw"}
         type="card"
         className="history-tabs"
-        items={[
-          {
-            key: 'chart',
-            label: 'Visual Trend',
-            children: (
-              <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                    <XAxis 
-                      dataKey="timestamp" 
-                      tickFormatter={(ts) => new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      tick={{ fontSize: 10 }}
-                      stroke="#94a3b8"
-                    />
-                    <YAxis tick={{ fontSize: 10 }} stroke="#94a3b8" />
-                    <Tooltip 
-                      labelFormatter={(ts) => new Date(ts).toLocaleString()}
-                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                    />
-                    <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
-                    {tags.map((tag, idx) => (
-                      <Line
-                        key={tag}
-                        type="monotone"
-                        dataKey={tag}
-                        stroke={COLORS[idx % COLORS.length]}
-                        strokeWidth={2.5}
-                        dot={{ r: 4, strokeWidth: 2, fill: '#fff' }}
-                        activeDot={{ r: 6, strokeWidth: 0 }}
-                        animationDuration={1000}
-                      />
-                    ))}
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            )
-          },
-          {
-            key: 'table',
-            label: 'Data Log',
-            children: (
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <Table 
-                  dataSource={tableData} 
-                  columns={columns} 
-                  pagination={{ pageSize: 15 }}
-                  size="middle"
-                />
-              </div>
-            )
-          }
-        ]}
+        items={tabItems}
       />
     </div>
   );

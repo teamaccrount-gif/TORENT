@@ -1,18 +1,22 @@
 import React from 'react';
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { PERMISSIONS } from '../../config/permissions';
+import { PERMISSIONS, TABLE_LEVELS } from '../../config/permissions';
+import { canViewTableAtLevel } from '../../utils/registrationHelpers';
 import type { Role } from '../../types';
 
-export const ProtectedRoute: React.FC<{ action?: keyof typeof PERMISSIONS[Role] }> = ({ action }) => {
-  const { isAuthenticated, role } = useAuth();
+export const ProtectedRoute: React.FC<{ action?: keyof typeof PERMISSIONS[Role] | 'allowedTables' }> = ({ action }) => {
+  const { isAuthenticated, user } = useAuth();
   const location = useLocation();
-  const normalizedRole = role ? (role.toUpperCase() as Role) : null;
-  const permissions = normalizedRole ? PERMISSIONS[normalizedRole] : undefined;
+  const { tableType } = useParams<{ tableType: string }>();
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
+
+  const role = user.role.toLowerCase() as Role;
+  const level = user.level;
+  const permissions = PERMISSIONS[role];
 
   if (!permissions) {
     console.warn('[PROTECTED_ROUTE] Unknown or unsupported role:', role);
@@ -20,17 +24,28 @@ export const ProtectedRoute: React.FC<{ action?: keyof typeof PERMISSIONS[Role] 
   }
 
   if (action) {
-    const hasPermission = permissions[action];
-    
-    let isAllowed = false;
-    if (typeof hasPermission === 'boolean') {
-      isAllowed = hasPermission;
-    } else if (Array.isArray(hasPermission)) {
-      isAllowed = hasPermission.length > 0;
-    }
+    if (action === 'allowedTables') {
+      const slug = tableType?.toLowerCase() || '';
+      if (!slug) return <Outlet />;
+      
+      const tableLevel = TABLE_LEVELS[slug];
+      if (!tableLevel) return <Navigate to="/dashboard" replace />;
 
-    if (!isAllowed) {
-      return <Navigate to="/dashboard" replace />;
+      if (!canViewTableAtLevel(level, tableLevel)) {
+        console.warn(`[PROTECTED_ROUTE] Access denied to table ${slug} for level ${level}`);
+        return <Navigate to="/dashboard" replace />;
+      }
+    } else {
+      const hasPermission = (permissions as any)[action];
+      
+      let isAllowed = false;
+      if (typeof hasPermission === 'boolean') {
+        isAllowed = hasPermission;
+      }
+
+      if (!isAllowed) {
+        return <Navigate to="/dashboard" replace />;
+      }
     }
   }
 

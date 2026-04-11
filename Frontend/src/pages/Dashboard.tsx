@@ -11,13 +11,13 @@ const Dashboard: React.FC = () => {
     return null;
   }
 
-  const roleText = role.replace('_', ' ');
+  const roleText = role.replace(/_/g, ' ');
 
   let primaryScopeText = "Welcome to your operations dashboard.";
-  if (role === 'SUPER_ADMIN') primaryScopeText = "You have full country-level access to the system.";
-  else if (role === 'REGION_MANAGER') primaryScopeText = `You are managing data across your assigned regions.`;
-  else if (role === 'CITY_MANAGER') primaryScopeText = `You are managing operations for your assigned city.`;
-  else if (role === 'STATION_MANAGER') primaryScopeText = "You are currently monitoring your assigned station.";
+  if (role === 'super_admin' || role === 'admin') primaryScopeText = "You have full country-level access to the system.";
+  else if (role === 'manager') primaryScopeText = `You are managing data across your assigned regions.`;
+  else if (role === 'engineer') primaryScopeText = `You are managing operations for your assigned city.`;
+  else if (role === 'operator') primaryScopeText = "You are currently monitoring your assigned station data.";
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -44,7 +44,7 @@ const Dashboard: React.FC = () => {
           </Button>
         </div>
 
-        {['SUPER_ADMIN', 'REGION_MANAGER', 'CITY_MANAGER'].includes(role) && (
+        {['super admin', 'admin'].includes(role) && (
           <div className="bg-white shadow-sm sm:rounded-lg border border-gray-200 p-6 flex flex-col items-start transition ease-in-out hover:shadow-md">
             <h2 className="text-lg font-medium text-gray-900">Team Management</h2>
             <p className="mt-1 text-sm text-gray-500 flex-1">
@@ -56,7 +56,7 @@ const Dashboard: React.FC = () => {
           </div>
         )}
 
-        {['SUPER_ADMIN', 'REGION_MANAGER', 'CITY_MANAGER'].includes(role) && (
+        {['super admin', 'admin'].includes(role) && (
           <div className="bg-white shadow-sm sm:rounded-lg border border-gray-200 p-6 flex flex-col items-start transition ease-in-out hover:shadow-md">
             <h2 className="text-lg font-medium text-gray-900">Onboard Members</h2>
             <p className="mt-1 text-sm text-gray-500 flex-1">
@@ -68,7 +68,7 @@ const Dashboard: React.FC = () => {
           </div>
         )}
 
-        {role === 'STATION_MANAGER' && (
+        {role === 'operator' && (
           <div className="bg-white shadow-sm sm:rounded-lg border border-gray-200 p-6 flex flex-col items-start transition ease-in-out hover:shadow-md">
             <h2 className="text-lg font-medium text-gray-900">System Status</h2>
             <p className="mt-1 text-sm text-gray-500 flex-1">

@@ -46,12 +46,10 @@ export const CommonTable: React.FC<CommonTableProps> = ({ type, data, loading })
     const addDrs = () => hierarchy.push({ title: 'DRS', dataIndex: 'drs', key: 'drs' });
 
     const slug = tableType.toLowerCase();
-
     if (['region', 'area', 'cgs', 'station', 'png', 'lcng', 'compressor', 'dispenser', 'device', 'drs', 'industrial', 'commercial', 'domestic'].includes(slug)) addCountry();
     if (['area', 'cgs', 'station', 'png', 'lcng', 'compressor', 'dispenser', 'device', 'drs', 'industrial', 'commercial', 'domestic'].includes(slug)) addRegion();
     if (['cgs', 'station', 'png', 'lcng', 'compressor', 'dispenser', 'device', 'drs', 'industrial', 'commercial', 'domestic'].includes(slug)) addArea();
     if (['station', 'png', 'lcng', 'compressor', 'dispenser', 'device', 'drs', 'industrial', 'commercial', 'domestic'].includes(slug)) addCgs();
-    
     if (['compressor', 'dispenser', 'device'].includes(slug)) addStation();
     if (slug === 'drs' || ['industrial', 'commercial', 'domestic'].includes(slug)) addPng();
     if (['industrial', 'commercial', 'domestic'].includes(slug)) addDrs();

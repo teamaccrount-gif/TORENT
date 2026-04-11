@@ -1,54 +1,65 @@
-import type { Role } from '../types';
+import type { RegistrationAccessLevel, Role } from '../types';
 
 export interface RolePermissions {
-  canCreate: Role[];
-  canManage: Role[];
+  canCreate: boolean;
+  canManage: boolean;
   canAccessFilters: boolean;
   canAccessDashboard: boolean;
-  allowedTables: string[];
+  // allowedTables is now handled by level-based logic in ProtectedRoute and Sidebar
 }
 
 export const PERMISSIONS: Record<Role, RolePermissions> = {
-  ADMIN: {
-    canCreate: ['REGION_MANAGER'],
-    canManage: ['REGION_MANAGER', 'CITY_MANAGER', 'STATION_MANAGER'],
+  'super_admin': {
+    canCreate: true,
+    canManage: true,
     canAccessFilters: true,
     canAccessDashboard: true,
-    allowedTables: ['region', 'area', 'station', 'cgs', 'device', 'png', 'lcng', 'industrial', 'commercial', 'dispenser', 'compressor', 'drs', 'domestic'],
-  },  
-  // MANAGER: {
-  //   canCreate: ['REGION_MANAGER'],
-  //   canManage: ['REGION_MANAGER', 'CITY_MANAGER', 'STATION_MANAGER'],
-  //   canAccessFilters: true,
-  //   canAccessDashboard: true,
-  //   allowedTables: ['region', 'area', 'station', 'cgs', 'device', 'png', 'lcng', 'industrial', 'commercial', 'dispenser', 'compressor', 'drs', 'domestic'],
-  // },
-  SUPER_ADMIN: {
-    canCreate: ['REGION_MANAGER'],
-    canManage: ['REGION_MANAGER', 'CITY_MANAGER', 'STATION_MANAGER'],
-    canAccessFilters: true,
-    canAccessDashboard: true,
-    allowedTables: ['region', 'area', 'station', 'cgs', 'device', 'png', 'lcng', 'industrial', 'commercial', 'dispenser', 'compressor', 'drs', 'domestic'],
   },
-  REGION_MANAGER: {
-    canCreate: ['CITY_MANAGER'],
-    canManage: ['CITY_MANAGER', 'STATION_MANAGER'],
+  'admin': {
+    canCreate: true,
+    canManage: true,
     canAccessFilters: true,
     canAccessDashboard: true,
-    allowedTables: ['area', 'station', 'cgs', 'device', 'png', 'lcng', 'industrial', 'commercial', 'dispenser', 'compressor', 'drs', 'domestic'],
   },
-  CITY_MANAGER: {
-    canCreate: ['STATION_MANAGER'],
-    canManage: ['STATION_MANAGER'],
+  'manager': {
+    canCreate: false,
+    canManage: false,
     canAccessFilters: true,
     canAccessDashboard: true,
-    allowedTables: ['station', 'cgs', 'device', 'png', 'lcng', 'industrial', 'commercial', 'dispenser', 'compressor', 'drs', 'domestic'],
   },
-  STATION_MANAGER: {
-    canCreate: [],
-    canManage: [],
+  'engineer': {
+    canCreate: false,
+    canManage: false,
     canAccessFilters: true,
     canAccessDashboard: true,
-    allowedTables: ['dispenser', 'compressor', 'device'],
+  },
+  'operator': {
+    canCreate: false,
+    canManage: false,
+    canAccessFilters: true,
+    canAccessDashboard: true,
   },
 };
+
+// Mapping of table slugs to their hierarchical level
+export const TABLE_LEVELS: Record<string, RegistrationAccessLevel> = {
+  country: 'country',
+  region: 'region',
+  area: 'city',
+  station: 'station',
+  cgs: 'station', // Technical tables are treated as station level or below
+  device: 'station',
+  png: 'station',
+  lcng: 'station',
+  industrial: 'station',
+  commercial: 'station',
+  dispenser: 'station',
+  compressor: 'station',
+  drs: 'station',
+  domestic: 'station',
+};
+
+export const ALL_TECHNICAL_TABLES = [
+  'country', 'region', 'area', 'station', 'cgs', 'device', 'png', 
+  'lcng', 'industrial', 'commercial', 'dispenser', 'compressor', 'drs', 'domestic'
+];

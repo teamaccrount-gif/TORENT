@@ -1,7 +1,8 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { PERMISSIONS } from '../../config/permissions';
+import { PERMISSIONS, ALL_TECHNICAL_TABLES, TABLE_LEVELS } from '../../config/permissions';
+import { canViewTableAtLevel } from '../../utils/registrationHelpers';
 import { 
   DashboardOutlined, 
   HistoryOutlined, 
@@ -11,24 +12,33 @@ import {
 } from '@ant-design/icons';
 
 export const Sidebar: React.FC = () => {
-  const { role } = useAuth();
+  const { user } = useAuth();
   const location = useLocation();
 
-  if (!role) return null;
+  if (!user) return null;
 
+  const role = user.role.toLowerCase() as keyof typeof PERMISSIONS;
+  const level = user.level;
   const perms = PERMISSIONS[role];
+
   if (!perms) {
     console.warn('[SIDEBAR] No permissions found for role:', role);
     return null;
   }
+
   const isFilterActive = location.pathname.startsWith('/filters');
+
+  const allowedTables = ALL_TECHNICAL_TABLES.filter(tableSlug => {
+    const tableLevel = TABLE_LEVELS[tableSlug];
+    return tableLevel && canViewTableAtLevel(level, tableLevel);
+  });
 
   return (
     <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex md:flex-col shrink-0 overflow-y-auto">
       <div className="h-16 flex items-center px-6 border-b border-gray-200 shrink-0">
         <span className="text-xl font-bold text-blue-600 tracking-tight italic">Torent</span>
       </div>
-      
+      x 
       <div className="flex-1 px-4 py-6 space-y-8">
         {/* Main Navigation */}
         <nav className="space-y-1">
@@ -58,11 +68,11 @@ export const Sidebar: React.FC = () => {
         </nav>
 
         {/* Technical Inventory (Tables) */}
-        {perms.allowedTables.length > 0 && (
+        {allowedTables.length > 0 && (
           <nav className="space-y-1">
             <p className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Technical Inventory</p>
             <div className="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-              {perms.allowedTables.map((table) => (
+              {allowedTables.map((table) => (
                 <NavLink
                   key={table}
                   to={`/tables/${table}`}
@@ -80,10 +90,10 @@ export const Sidebar: React.FC = () => {
         )}
 
         {/* Administration */}
-        {(perms.canManage.length > 0 || perms.canCreate.length > 0) && (
+        {(perms.canManage || perms.canCreate) && (
           <nav className="space-y-1">
             <p className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Administration</p>
-            {perms.canManage.length > 0 && (
+            {perms.canManage && (
               <NavLink
                 to="/manage"
                 className={({ isActive }) =>
@@ -95,7 +105,7 @@ export const Sidebar: React.FC = () => {
                 <TeamOutlined className="mr-3" /> Manage Users
               </NavLink>
             )}
-            {perms.canCreate.length > 0 && (
+            {perms.canCreate && (
               <NavLink
                 to="/register"
                 className={({ isActive }) =>
