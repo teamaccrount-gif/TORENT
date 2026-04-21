@@ -1,6 +1,6 @@
 export type Role = 'super_admin' | 'admin' | 'manager' | 'engineer' | 'operator';
 
-export type RegistrationAccessLevel = 'country' | 'region' | 'city' | 'station';
+export type RegistrationAccessLevel = 'country' | 'region' | 'city' | 'station' | 'component';
 
 export interface User {
   id: string | number;

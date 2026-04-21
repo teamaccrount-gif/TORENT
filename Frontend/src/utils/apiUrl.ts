@@ -45,6 +45,17 @@ export const API_URLS = {
   TABLE_COMPRESSOR: `${API_BASE}/api/v1/tables/compressor`,
   TABLE_DRS: `${API_BASE}/api/v1/tables/drs`,
   TABLE_DOMESTIC: `${API_BASE}/api/v1/tables/domestic`,
+
+  // Leaflat endpoint - fetches geospatial data for mapping
+  LEAFLET_REGION: `${API_BASE}/api/v1/gis/region/:name/boundary`,
+  LEAFLET_STATION: `${API_BASE}/api/v1/gis/station/:name/location`,
+  LEAFLET_AREA: `${API_BASE}/api/v1/gis/area/:name/boundary`,
+  LEAFLET_MAP_GET : `${API_BASE}/api/v1/gis/map`,
+
+  // Drop downs endpoints
+  AREA_BY_REGION : `${API_BASE}/api/v1/tables/areas-by-region/:region`,
+  STATION_BY_AREA : `${API_BASE}/api/v1/tables/stations-by-area/:area`,
+  ALL_REGIONS : `${API_BASE}/api/v1/tables/all-regions`,
 } as const;
 
 export default API_URLS;

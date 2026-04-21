@@ -44,6 +44,20 @@ const Dashboard: React.FC = () => {
           </Button>
         </div>
 
+        {
+          ['super_admin', 'admin', 'manager'].includes(role) && (
+            <div className="bg-white shadow-sm sm:rounded-lg border border-gray-200 p-6 flex flex-col items-start transition ease-in-out hover:shadow-md">
+              <h2 className="text-lg font-medium text-gray-900">Geospatial Mapping</h2>
+              <p className="mt-1 text-sm text-gray-500 flex-1">
+                Visualize station locations, regional boundaries, and city areas on an interactive map interface.
+              </p>
+              <Button variant="primary" className="mt-4" onClick={() => navigate('/map')}>
+                View Map
+              </Button>
+            </div>
+          )
+        }
+
         {['super admin', 'admin'].includes(role) && (
           <div className="bg-white shadow-sm sm:rounded-lg border border-gray-200 p-6 flex flex-col items-start transition ease-in-out hover:shadow-md">
             <h2 className="text-lg font-medium text-gray-900">Team Management</h2>
@@ -75,7 +89,7 @@ const Dashboard: React.FC = () => {
               Your station equipment is currently reporting correctly. All telemetry sockets are established.
             </p>
             <div className="mt-4 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
-               Connection Stable
+              Connection Stable
             </div>
           </div>
         )}

@@ -1,12 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../../Redux/Store';
 import {
-  fetchAreas,
-  fetchRegions,
-  fetchRegistrationStations,
   fetchRoles,
   addUser,
 } from '../../Redux/Slices/registrationSlice';
+import {
+  fetchAllRegions,
+  fetchAreaByRegion,
+  fetchStationByArea,
+} from '../../Redux/Slices/dropdownSlice';
 import { EmailField } from './fields/EmailField';
 import { PasswordField } from './fields/PasswordField';
 import { PhoneField } from './fields/PhoneField';
@@ -45,23 +47,22 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ targetRole }
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
-  const [selectedRoleId, setSelectedRoleId] = useState('');
-  const [selectedRegionId, setSelectedRegionId] = useState('');
-  const [selectedAreaIds, setSelectedAreaIds] = useState<string[]>([]);
-  const [selectedStationId, setSelectedStationId] = useState('');
+  const [selectedRegionName, setSelectedRegionName] = useState('');
+  const [selectedAreaNamesState, setSelectedAreaNamesState] = useState<string[]>([]);
+  const [selectedStationName, setSelectedStationName] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const rolesResponse = useAppSelector((state) => state.registrationSlice.data.fetchRoles) as ApiResponse<RoleOption[]> | RoleOption[] | null;
-  const regionsResponse = useAppSelector((state) => state.registrationSlice.data.fetchRegions) as ApiResponse<RegionOption[]> | RegionOption[] | null;
-  const areasResponse = useAppSelector((state) => state.registrationSlice.data.fetchAreas) as ApiResponse<AreaOption[]> | AreaOption[] | null;
-  const stationsResponse = useAppSelector((state) => state.registrationSlice.data.fetchRegistrationStations) as ApiResponse<RegistrationStationOption[]> | RegistrationStationOption[] | null;
+  const regionsResponse = useAppSelector((state) => state.dropdownSlice.data.fetchAllRegions) as ApiResponse<RegionOption[]> | RegionOption[] | null;
+  const areasResponse = useAppSelector((state) => state.dropdownSlice.data.fetchAreaByRegion) as ApiResponse<AreaOption[]> | AreaOption[] | null;
+  const stationsResponse = useAppSelector((state) => state.dropdownSlice.data.fetchStationByArea) as ApiResponse<RegistrationStationOption[]> | RegistrationStationOption[] | null;
 
   const rolesLoading = useAppSelector((state) => state.registrationSlice.loading.fetchRoles);
-  const regionsLoading = useAppSelector((state) => state.registrationSlice.loading.fetchRegions);
-  const areasLoading = useAppSelector((state) => state.registrationSlice.loading.fetchAreas);
-  const stationsLoading = useAppSelector((state) => state.registrationSlice.loading.fetchRegistrationStations);
+  const regionsLoading = useAppSelector((state) => state.dropdownSlice.loading.fetchAllRegions);
+  const areasLoading = useAppSelector((state) => state.dropdownSlice.loading.fetchAreaByRegion);
+  const stationsLoading = useAppSelector((state) => state.dropdownSlice.loading.fetchStationByArea);
 
   const roles = useMemo(() => normalizeRoles(rolesResponse), [rolesResponse]);
   const regions = useMemo(() => normalizeRegions(regionsResponse), [regionsResponse]);
@@ -74,13 +75,13 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ targetRole }
   );
 
   const selectedRole = useMemo(
-    () => allowedRoleOptions.find((role) => role.role_id === selectedRoleId) || allowedRoleOptions[0] || null,
-    [allowedRoleOptions, selectedRoleId]
+    () => allowedRoleOptions[0] || null,
+    [allowedRoleOptions]
   );
 
   const selectedRegion = useMemo(
-    () => regions.find((region) => region.region_id === selectedRegionId) || null,
-    [regions, selectedRegionId]
+    () => regions.find((region) => region.region_name === selectedRegionName) || null,
+    [regions, selectedRegionName]
   );
 
   const visibleAreas = useMemo(
@@ -89,21 +90,21 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ targetRole }
   );
 
   const selectedAreaRecords = useMemo(
-    () => visibleAreas.filter((area) => selectedAreaIds.includes(area.area_id)),
-    [selectedAreaIds, visibleAreas]
+    () => visibleAreas.filter((area) => selectedAreaNamesState.includes(area.area_name)),
+    [selectedAreaNamesState, visibleAreas]
   );
 
   const selectedAreaNames = selectedAreaRecords.map((area) => area.area_name);
-  const selectedStation = stations.find((station) => station.station_id === selectedStationId) || null;
+  const selectedStation = stations.find((station) => station.station_name === selectedStationName) || null;
 
-  const visibleStations = useMemo(() => {
-    if (targetRole !== 'operator' || selectedAreaNames.length === 0) {
-      return [];
-    }
+  const visibleStations = stations;
 
-    const cityName = selectedAreaNames[0];
-    return stations.filter((station) => station.area_name.toLowerCase() === cityName.toLowerCase());
-  }, [stations, selectedAreaNames, targetRole]);
+  useEffect(() => {
+    console.log("[RegistrationForm] Roles Data:", rolesResponse);
+    console.log("[RegistrationForm] Regions Data:", regionsResponse);
+    console.log("[RegistrationForm] Areas Data:", areasResponse);
+    console.log("[RegistrationForm] Stations Data:", stationsResponse);
+  }, [rolesResponse, regionsResponse, areasResponse, stationsResponse]);
 
   const headers = {
     "Content-Type": "application/json",
@@ -116,45 +117,45 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ targetRole }
       console.log("roles", response);
     }
     if (!regionsResponse && regionsLoading !== 'pending' && regionsLoading !== 'fulfilled') {
-      dispatch(fetchRegions({ method: 'GET' }));
-    }
-    if (!areasResponse && areasLoading !== 'pending' && areasLoading !== 'fulfilled') {
-      dispatch(fetchAreas({ method: 'GET' }));
-    }
-    if (!stationsResponse && stationsLoading !== 'pending' && stationsLoading !== 'fulfilled') {
-      dispatch(fetchRegistrationStations({ method: 'GET' }));
+      dispatch(fetchAllRegions({ method: 'GET' }));
     }
   }, [dispatch]);
 
-  useEffect(() => {
-    if (allowedRoleOptions.length === 0) {
-      setSelectedRoleId('');
-      return;
-    }
 
-    const roleExists = allowedRoleOptions.some((role) => role.role_id === selectedRoleId);
-    if (!roleExists) {
-      setSelectedRoleId(allowedRoleOptions[0].role_id);
-    }
-  }, [allowedRoleOptions, selectedRoleId]);
 
   useEffect(() => {
-    setSelectedRegionId('');
-    setSelectedAreaIds([]);
-    setSelectedStationId('');
+    setSelectedRegionName('');
+    setSelectedAreaNamesState([]);
+    setSelectedStationName('');
   }, [targetRole]);
 
   const handleRegionChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedRegionId(event.target.value);
-    setSelectedAreaIds([]);
-    setSelectedStationId('');
+    const regionName = event.target.value;
+    setSelectedRegionName(regionName);
+    setSelectedAreaNamesState([]);
+    setSelectedStationName('');
+
+    if (regionName) {
+      dispatch(fetchAreaByRegion({
+        method: 'GET',
+        params: { region: regionName }
+      }));
+    }
   };
 
   const handleAreaChange = (value: string[] | string) => {
     const nextValue = Array.isArray(value) ? value : [value];
-    setSelectedAreaIds(nextValue);
-    if (targetRole === 'operator') {
-      setSelectedStationId('');
+    setSelectedAreaNamesState(nextValue);
+    
+    if (targetRole === 'operator' || targetRole === 'engineer') {
+      setSelectedStationName('');
+      if (nextValue.length > 0) {
+        const areaName = nextValue[0];
+        dispatch(fetchStationByArea({
+          method: 'GET',
+          params: { area: areaName }
+        }));
+      }
     }
   };
 
@@ -173,12 +174,12 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ targetRole }
       return;
     }
 
-    if (selectedAreaIds.length === 0) {
-      setErrorMsg(targetRole === 'manager' ? 'Please select at least one city.' : 'Please select a city.');
+    if (selectedAreaNamesState.length === 0) {
+      setErrorMsg((targetRole === 'manager' || targetRole === 'admin') ? 'Please select at least one city.' : 'Please select a city.');
       return;
     }
 
-    if (targetRole === 'operator' && !selectedStation) {
+    if ((targetRole === 'operator' || targetRole === 'engineer') && !selectedStation) {
       setErrorMsg('Please select a station.');
       return;
     }
@@ -193,9 +194,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ targetRole }
       phone,
       role_id: Number(selectedRole.role_id),
       level: selectedAccessLevel,
-      regions: targetRole === 'manager' ? [selectedRegion.region_name] : [],
-      areas: targetRole === 'manager' || targetRole === 'engineer' ? (targetRole === 'manager' ? selectedAreasForPayload : [selectedAreasForPayload[0]].filter(Boolean)) : [],
-      stations: targetRole === 'operator' && selectedStation ? [selectedStation.station_name] : [],
+      regions: selectedRegion ? [selectedRegion.region_name] : [],
+      areas: selectedAreasForPayload,
+      stations: (targetRole === 'operator' || targetRole === 'engineer') && selectedStation ? [selectedStation.station_name] : [],
     };
 
     console.log(localStorage.getItem('accessToken'));
@@ -224,9 +225,9 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ targetRole }
           setEmail('');
           setPassword('');
           setPhone('');
-          setSelectedRegionId('');
-          setSelectedAreaIds([]);
-          setSelectedStationId('');
+          setSelectedRegionName('');
+          setSelectedAreaNamesState([]);
+          setSelectedStationName('');
           return;
         }
 
@@ -244,27 +245,24 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ targetRole }
     }
   };
 
-  const roleOptions = allowedRoleOptions.map((role) => ({
-    value: role.role_id,
-    label: role.role_name,
-  }));
+
 
   const regionOptions = regions.map((region) => ({
-    value: region.region_id,
+    value: region.region_name,
     label: region.region_name,
   }));
 
   const areaOptions = visibleAreas.map((area) => ({
-    value: area.area_id,
+    value: area.area_name,
     label: area.area_name,
   }));
 
   const stationOptions = visibleStations.map((station) => ({
-    value: station.station_id,
+    value: station.station_name,
     label: station.station_name,
   }));
 
-  const roleDropdownValue = selectedRole?.role_id || '';
+
 
   return (
     <form className="space-y-6 bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-200" onSubmit={handleSubmit}>
@@ -332,25 +330,13 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ targetRole }
           />
         </div>
 
-        <div className="sm:col-span-2">
-          <FormField label="Role" htmlFor="role">
-            <Dropdown
-              id="role"
-              value={roleDropdownValue}
-              onChange={(e) => setSelectedRoleId(e.target.value)}
-              options={roleOptions}
-              isLoading={rolesLoading === 'pending'}
-              disabled={isSubmitting || roleOptions.length === 0}
-              placeholder="Select role"
-            />
-          </FormField>
-        </div>
+
 
         <div className="sm:col-span-2">
           <FormField label="Region" htmlFor="region">
             <Dropdown
               id="region"
-              value={selectedRegionId}
+              value={selectedRegionName}
               onChange={handleRegionChange}
               options={regionOptions}
               isLoading={regionsLoading === 'pending'}
@@ -360,12 +346,12 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ targetRole }
           </FormField>
         </div>
 
-        {selectedRegion && targetRole !== 'manager' && (
+        {selectedRegion && targetRole !== 'manager' && targetRole !== 'admin' && (
           <div className="sm:col-span-2">
             <FormField label="City" htmlFor="area">
               <Dropdown
                 id="area"
-                value={selectedAreaIds[0] || ''}
+                value={selectedAreaNamesState[0] || ''}
                 onChange={(e) => handleAreaChange(e.target.value)}
                 options={areaOptions}
                 isLoading={areasLoading === 'pending'}
@@ -376,12 +362,12 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ targetRole }
           </div>
         )}
 
-        {selectedRegion && targetRole === 'manager' && (
+        {selectedRegion && (targetRole === 'manager' || targetRole === 'admin') && (
           <div className="sm:col-span-2">
             <FormField label="Cities" htmlFor="areas">
               <MultiSelectDropdown
                 options={areaOptions}
-                value={selectedAreaIds}
+                value={selectedAreaNamesState}
                 onChange={handleAreaChange}
                 isLoading={areasLoading === 'pending'}
                 disabled={isSubmitting || areaOptions.length === 0}
@@ -391,13 +377,13 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ targetRole }
           </div>
         )}
 
-        {selectedRegion && targetRole === 'operator' && selectedAreaIds.length > 0 && (
+        {selectedRegion && (targetRole === 'operator' || targetRole === 'engineer') && selectedAreaNamesState.length > 0 && (
           <div className="sm:col-span-2">
             <FormField label="Station" htmlFor="station">
               <Dropdown
                 id="station"
-                value={selectedStationId}
-                onChange={(e) => setSelectedStationId(e.target.value)}
+                value={selectedStationName}
+                onChange={(e) => setSelectedStationName(e.target.value)}
                 options={stationOptions}
                 isLoading={stationsLoading === 'pending'}
                 disabled={isSubmitting || stationOptions.length === 0}

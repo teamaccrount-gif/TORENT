@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "../ui/Button";
-import { DataVisualizer } from "./DataVisualizer";
+import { DataVisualizer } from "../data-visualizer/DataVisualizer";
 import { useTelemetryFilter } from "../../context/TelemetryFilterContext";
 
 interface HistoryLayoutProps {
