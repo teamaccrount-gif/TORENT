@@ -22,17 +22,8 @@ model Alarm {
   @@index([timestamp1])
 }
 
-model History {
-  id            Int           @id @default(autoincrement())
-  telemetry_id  Int
-  value         Float
-  quality       Int
-  timestamp     DateTime
-  TelemetryData TelemetryData @relation(fields: [telemetry_id], references: [id])
-}
-
 model TelemetryData {
-  id         Int       @id @default(autoincrement())
+  id         Int    @id @default(autoincrement())
   country    String
   region     String
   area       String
@@ -41,40 +32,12 @@ model TelemetryData {
   compressor String
   point      String
   parameter  String
-  tag        String    @unique
-  History    History[]
-}
-
-model EventLog {
-  id         Int       @id(map: "event_logs_pkey") @default(autoincrement())
-  username   String?
-  endpoint   String?
-  method     String?
-  params     Json?
-  created_at DateTime? @default(now()) @db.Timestamp(6)
-  request_id String?   @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-}
-
-model TransactionLog {
-  id         Int       @id(map: "transaction_logs_pkey") @default(autoincrement())
-  username   String?
-  endpoint   String?
-  created_at DateTime? @default(now()) @db.Timestamp(6)
-  request_id String?   @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-}
-
-model ErrorLog {
-  id         Int       @id(map: "error_logs_pkey") @default(autoincrement())
-  username   String?
-  endpoint   String?
-  error      String?
-  created_at DateTime? @default(now()) @db.Timestamp(6)
-  request_id String?   @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tag        String @unique
 }
 
 model Country {
-  id              Int     @id @default(autoincrement())
-  name            String  @unique
+  id              Int    @id @default(autoincrement())
+  name            String @unique
   gas_in          Float?
   gas_out         Float?
   avg_shi         Float?
@@ -88,7 +51,7 @@ model Country {
 }
 
 model Region {
-  id              Int     @id @default(autoincrement())
+  id              Int                      @id @default(autoincrement())
   name            String
   country         String
   gas_in          Float?
@@ -99,13 +62,15 @@ model Region {
   sales_today     Float?
   revenue_today   Float?
   total_stations  Int?
+  boundary        Unsupported("geometry")?
 
   @@unique([name, country])
+  @@index([boundary], map: "idx_region_boundary", type: Gist)
   @@map("region")
 }
 
 model Area {
-  id              Int     @id @default(autoincrement())
+  id              Int                      @id @default(autoincrement())
   name            String
   region          String
   country         String
@@ -117,13 +82,15 @@ model Area {
   sales_today     Float?
   revenue_today   Float?
   total_stations  Int?
+  boundary        Unsupported("geometry")?
 
   @@unique([name, region])
+  @@index([boundary], map: "idx_area_boundary", type: Gist)
   @@map("area")
 }
 
 model Cgs {
-  id              Int     @id @default(autoincrement())
+  id              Int    @id @default(autoincrement())
   name            String
   area            String
   region          String
@@ -142,21 +109,23 @@ model Cgs {
 }
 
 model Station {
-  id      Int     @id @default(autoincrement())
-  name    String
-  cgs     String
-  area    String
-  region  String
-  country String
-  gas_in  Float?
-  gas_out Float?
+  id       Int                      @id @default(autoincrement())
+  name     String
+  cgs      String
+  area     String
+  region   String
+  country  String
+  gas_in   Float?
+  gas_out  Float?
+  location Unsupported("geometry")?
 
   @@unique([name, cgs])
+  @@index([location], map: "idx_station_location", type: Gist)
   @@map("station")
 }
 
 model Compressor {
-  id      Int     @id @default(autoincrement())
+  id      Int    @id @default(autoincrement())
   name    String
   station String
   cgs     String
@@ -171,7 +140,7 @@ model Compressor {
 }
 
 model Dispenser {
-  id      Int     @id @default(autoincrement())
+  id      Int    @id @default(autoincrement())
   name    String
   station String
   cgs     String
@@ -186,7 +155,7 @@ model Dispenser {
 }
 
 model Device {
-  id      Int     @id @default(autoincrement())
+  id      Int    @id @default(autoincrement())
   name    String
   station String
   cgs     String
@@ -201,7 +170,7 @@ model Device {
 }
 
 model Png {
-  id      Int     @id @default(autoincrement())
+  id      Int    @id @default(autoincrement())
   name    String
   cgs     String
   area    String
@@ -215,7 +184,7 @@ model Png {
 }
 
 model Lcng {
-  id      Int     @id @default(autoincrement())
+  id      Int    @id @default(autoincrement())
   name    String
   cgs     String
   area    String
@@ -229,7 +198,7 @@ model Lcng {
 }
 
 model Drs {
-  id      Int     @id @default(autoincrement())
+  id      Int    @id @default(autoincrement())
   name    String
   png     String
   cgs     String
@@ -244,7 +213,7 @@ model Drs {
 }
 
 model Industrial {
-  id      Int     @id @default(autoincrement())
+  id      Int    @id @default(autoincrement())
   name    String
   drs     String
   png     String
@@ -260,7 +229,7 @@ model Industrial {
 }
 
 model Commercial {
-  id      Int     @id @default(autoincrement())
+  id      Int    @id @default(autoincrement())
   name    String
   drs     String
   png     String
@@ -276,7 +245,7 @@ model Commercial {
 }
 
 model Domestic {
-  id      Int     @id @default(autoincrement())
+  id      Int    @id @default(autoincrement())
   name    String
   drs     String
   png     String
@@ -292,36 +261,36 @@ model Domestic {
 }
 
 model User {
-  id            Int            @id @default(autoincrement())
-  first_name    String
-  last_name     String
-  email         String         @unique
-  password      String
-  phone         String?
-  is_active     Boolean        @default(true)
-  created_at    DateTime       @default(now())
-  updated_at    DateTime       @updatedAt
-  role          Role           @relation(fields: [role_id], references: [id])
-  role_id       Int
-  access        UserAccess?
+  id             Int            @id @default(autoincrement())
+  first_name     String
+  last_name      String
+  email          String         @unique
+  password       String
+  phone          String?
+  is_active      Boolean        @default(true)
+  created_at     DateTime       @default(now())
+  updated_at     DateTime       @updatedAt
+  role_id        Int
   refresh_tokens RefreshToken[]
- 
+  access         UserAccess?
+  role           Role           @relation(fields: [role_id], references: [id])
+
   @@map("users")
 }
 
 model Role {
-  id              Int              @id @default(autoincrement())
-  name            String           @unique  // super_admin, admin, manager, engineer, operator
-  users           User[]
+  id               Int              @id @default(autoincrement())
+  name             String           @unique
   role_permissions RolePermission[]
+  users            User[]
 
   @@map("roles")
 }
 
 model Permission {
-  id              Int              @id @default(autoincrement())
-  name            String           @unique  // e.g. create_user, edit_pid, view_schedule
-  description     String?
+  id               Int              @id @default(autoincrement())
+  name             String           @unique
+  description      String?
   role_permissions RolePermission[]
 
   @@map("permissions")
@@ -329,24 +298,23 @@ model Permission {
 
 model RolePermission {
   id            Int        @id @default(autoincrement())
-  role          Role       @relation(fields: [role_id], references: [id])
   role_id       Int
-  permission    Permission @relation(fields: [permission_id], references: [id])
   permission_id Int
+  permission    Permission @relation(fields: [permission_id], references: [id])
+  role          Role       @relation(fields: [role_id], references: [id])
 
   @@unique([role_id, permission_id])
   @@map("role_permissions")
 }
 
 model UserAccess {
-  id       Int     @id @default(autoincrement())
-  user     User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  user_id  Int     @unique
-  level    String  // region_manager, area_manager, station_manager
-  // stores the assigned node names as arrays
+  id       Int      @id @default(autoincrement())
+  user_id  Int      @unique
+  level    String
   regions  String[]
   areas    String[]
   stations String[]
+  user     User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("user_access")
 }
@@ -354,10 +322,90 @@ model UserAccess {
 model RefreshToken {
   id         Int      @id @default(autoincrement())
   token      String   @unique
-  user       User     @relation(fields: [user_id], references: [id])
   user_id    Int
   expires_at DateTime
   created_at DateTime @default(now())
+  user       User     @relation(fields: [user_id], references: [id])
 
   @@map("refresh_tokens")
+}
+
+model LoginLog {
+  id             Int      @id @default(autoincrement())
+  user_id        Int?
+  email          String
+  status         String   // "success" or "failed"
+  failure_reason String?
+  ip_address     String?
+  user_agent     String?
+  os             String?
+  browser        String?
+  device_type    String?
+  login_at       DateTime @default(now())
+  request_id     String?
+
+  @@index([email])
+  @@index([login_at])
+  @@index([ip_address])
+  @@map("login_logs")
+}
+
+model EventLog {
+  id         Int      @id @default(autoincrement())
+  user_id    Int?
+  email      String?
+  role       String?
+  endpoint   String?
+  method     String?
+  params     Json?
+  ip_address String?
+  user_agent String?
+  request_id String?
+  created_at DateTime @default(now())
+
+  @@index([email])
+  @@index([created_at])
+  @@map("event_logs")
+}
+
+model TransactionLog {
+  id         Int      @id @default(autoincrement())
+  user_id    Int?
+  email      String?
+  role       String?
+  endpoint   String?
+  method     String?
+  ip_address String?
+  request_id String?
+  created_at DateTime @default(now())
+
+  @@index([email])
+  @@index([created_at])
+  @@map("transaction_logs")
+}
+
+model ErrorLog {
+  id         Int      @id @default(autoincrement())
+  user_id    Int?
+  email      String?
+  role       String?
+  endpoint   String?
+  method     String?
+  error      String?
+  ip_address String?
+  request_id String?
+  created_at DateTime @default(now())
+
+  @@index([email])
+  @@index([created_at])
+  @@map("error_logs")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model spatial_ref_sys {
+  srid      Int     @id
+  auth_name String? @db.VarChar(256)
+  auth_srid Int?
+  srtext    String? @db.VarChar(2048)
+  proj4text String? @db.VarChar(2048)
 }
