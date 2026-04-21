@@ -1,4 +1,4 @@
-import type { User, City, Station, ManageableUser, ApiResponse } from '../types';
+import type { User, City, Station, ManageableUser, ApiResponse, Role, RegistrationAccessLevel } from '../types';
 
 export const mockResponse = <T>(data: T, delay = 800): Promise<ApiResponse<T>> => {
   return new Promise((resolve) => {
@@ -13,17 +13,27 @@ export const mockResponse = <T>(data: T, delay = 800): Promise<ApiResponse<T>> =
 };
 
 export const getMockUserByEmail = (email: string): User => {
-  let role: User['role'] = 'STATION_MANAGER';
+  let role: Role = 'operator';
+  let level: RegistrationAccessLevel = 'station';
   
-  if (email.includes('superadmin')) role = 'SUPER_ADMIN';
-  else if (email.includes('region')) role = 'REGION_MANAGER';
-  else if (email.includes('city')) role = 'CITY_MANAGER';
+  if (email.includes('superadmin')) {
+    role = 'super_admin';
+    level = 'country';
+  } else if (email.includes('region')) {
+    role = 'manager';
+    level = 'region';
+  } else if (email.includes('city')) {
+    role = 'engineer';
+    level = 'city';
+  }
 
   return {
     id: "mock-user-123",
     email: email,
     role: role,
-    name: "Mock User",
+    level: level,
+    first_name: "Mock",
+    last_name: "User",
     phone: "+91 9876543210",
     isActive: true,
   };
@@ -45,32 +55,44 @@ export const MOCK_USERS: ManageableUser[] = [
   {
     id: "user-1",
     email: "manager.mumbai@torent.com",
-    role: "CITY_MANAGER",
+    role: "engineer",
+    level: "city",
     isActive: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     phone: "+91 9000000001",
-    name: "Mumbai Manager"
+    first_name: "Mumbai",
+    last_name: "Manager",
+    created_at: new Date().toISOString(),
+    access: null
   },
   {
     id: "user-2",
     email: "station.andheri@torent.com",
-    role: "STATION_MANAGER",
+    role: "operator",
+    level: "station",
     isActive: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     phone: "+91 9000000002",
-    name: "Andheri Side Op"
+    first_name: "Andheri",
+    last_name: "Side Op",
+    created_at: new Date().toISOString(),
+    access: null
   },
   {
     id: "user-3",
     email: "region.west@torent.com",
-    role: "REGION_MANAGER",
+    role: "manager",
+    level: "region",
     isActive: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     phone: "+91 9000000003",
-    name: "West Zone Head"
+    first_name: "West Zone",
+    last_name: "Head",
+    created_at: new Date().toISOString(),
+    access: null
   }
 ];
 
@@ -125,4 +147,3 @@ export const generateMockTelemetryData = (tags: string[], start: string, end: st
 
   return result;
 };
-
