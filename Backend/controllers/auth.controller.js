@@ -6,21 +6,16 @@ import {
   generateRefreshToken,
   verifyRefreshToken,
 } from "../lib/jwt.js";
-import {
-  logError,
-  logEvent,
-  logTransaction,
-} from "../services/logs.service.js";
+import { logError, logEvent, logTransaction } from "../services/logs.service.js";
 import { logLogin } from "../services/loginLog.service.js";
+
 
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res
-        .status(400)
-        .json({ success: false, error: "Email and password are required" });
+      return res.status(400).json({ success: false, error: "Email and password are required" });
     }
 
     const user = await prisma.user.findUnique({
@@ -39,94 +34,62 @@ export const login = async (req, res) => {
 
     // Log event here — after we know who the user is (or isn't)
     await logEvent(req, {
-      user_id: user?.id ?? null,
-      email: email,
-      role: user?.role?.name ?? null,
+      user_id: user?.id   ?? null,
+      email:   email,
+      role:    user?.role?.name ?? null,
     });
 
     if (!user) {
-      await logLogin({
-        req,
-        email,
-        status: "failed",
-        failure_reason: "user_not_found",
-      });
-      return res
-        .status(401)
-        .json({ success: false, error: "Invalid credentials" });
+      await logLogin({ req, email, status: "failed", failure_reason: "user_not_found" });
+      return res.status(401).json({ success: false, error: "Invalid credentials" });
     }
 
     if (!user.is_active) {
-      await logLogin({
-        req,
-        email,
-        user_id: user.id,
-        status: "failed",
-        failure_reason: "account_inactive",
-      });
-      return res
-        .status(401)
-        .json({ success: false, error: "Invalid credentials" });
+      await logLogin({ req, email, user_id: user.id, status: "failed", failure_reason: "account_inactive" });
+      return res.status(401).json({ success: false, error: "Invalid credentials" });
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
-      await logLogin({
-        req,
-        email,
-        user_id: user.id,
-        status: "failed",
-        failure_reason: "wrong_password",
-      });
-      return res
-        .status(401)
-        .json({ success: false, error: "Invalid credentials" });
+      await logLogin({ req, email, user_id: user.id, status: "failed", failure_reason: "wrong_password" });
+      return res.status(401).json({ success: false, error: "Invalid credentials" });
     }
 
-    const permissions = user.role.role_permissions.map(
-      (rp) => rp.permission.name,
-    );
+    const permissions = user.role.role_permissions.map((rp) => rp.permission.name);
 
     const tokenPayload = {
-      user_id: user.id,
-      email: user.email,
-      role: user.role.name,
-      level: user.access?.level || null,
-      regions: user.access?.regions || [],
-      areas: user.access?.areas || [],
-      stations: user.access?.stations || [],
+      user_id:     user.id,
+      email:       user.email,
+      role:        user.role.name,
+      level:       user.access?.level || null,
       permissions,
     };
 
-    const accessToken = generateAccessToken(tokenPayload);
+    const accessToken  = generateAccessToken(tokenPayload);
     const refreshToken = generateRefreshToken({ user_id: user.id });
 
     await prisma.refreshToken.create({
       data: {
-        token: refreshToken,
-        user_id: user.id,
+        token:      refreshToken,
+        user_id:    user.id,
         expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       },
     });
 
     await logLogin({ req, email, user_id: user.id, status: "success" });
-    await logTransaction(req, {
-      user_id: user.id,
-      email,
-      role: user.role.name,
-    });
+    await logTransaction(req, { user_id: user.id, email, role: user.role.name });
 
     res.status(200).json({
       success: true,
       data: {
-        access_token: accessToken,
+        access_token:  accessToken,
         refresh_token: refreshToken,
         user: {
-          id: user.id,
-          email: user.email,
-          phone: user.phone,
-          role: user.role.name,
-          level: user.access?.level || null,
+          id:          user.id,
+          email:       user.email,
+          phone:       user.phone,
+          role:        user.role.name,
+          level:       user.access?.level || null,
           permissions,
         },
       },
@@ -137,14 +100,13 @@ export const login = async (req, res) => {
   }
 };
 
+
 export const refreshToken = async (req, res) => {
   try {
     const { refresh_token } = req.body;
 
     if (!refresh_token) {
-      return res
-        .status(400)
-        .json({ success: false, error: "Refresh token required" });
+      return res.status(400).json({ success: false, error: "Refresh token required" });
     }
 
     const decoded = verifyRefreshToken(refresh_token);
@@ -154,9 +116,7 @@ export const refreshToken = async (req, res) => {
     });
 
     if (!storedToken || storedToken.expires_at < new Date()) {
-      return res
-        .status(401)
-        .json({ success: false, error: "Invalid or expired refresh token" });
+      return res.status(401).json({ success: false, error: "Invalid or expired refresh token" });
     }
 
     const user = await prisma.user.findUnique({
@@ -174,23 +134,15 @@ export const refreshToken = async (req, res) => {
     });
 
     if (!user || !user.is_active) {
-      return res
-        .status(401)
-        .json({ success: false, error: "User not found or inactive" });
+      return res.status(401).json({ success: false, error: "User not found or inactive" });
     }
 
-    const permissions = user.role.role_permissions.map(
-      (rp) => rp.permission.name,
-    );
+    const permissions = user.role.role_permissions.map((rp) => rp.permission.name);
 
     const newAccessToken = generateAccessToken({
-      user_id: user.id,
-      email: user.email,
-      role: user.role.name,
-      level: user.access?.level || null,
-      regions: user.access?.regions || [],
-      areas: user.access?.areas || [],
-      stations: user.access?.stations || [],
+      user_id:     user.id,
+      role:        user.role.name,
+      level:       user.access?.level || null,
       permissions,
     });
 
@@ -203,14 +155,13 @@ export const refreshToken = async (req, res) => {
   }
 };
 
+
 export const logout = async (req, res) => {
   try {
     const { refresh_token } = req.body;
 
     if (!refresh_token) {
-      return res
-        .status(400)
-        .json({ success: false, error: "Refresh token required" });
+      return res.status(400).json({ success: false, error: "Refresh token required" });
     }
 
     await prisma.refreshToken.delete({
