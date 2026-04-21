@@ -189,12 +189,28 @@ export const deleteUser = async (req, res) => {
     await logEvent(req);
 
     const { id } = req.params;
-    
-    await prisma.user.delete({ where: { id: parseInt(id) } });
+    const userId = parseInt(id);
+
+    // ✅ First delete dependent records
+    await prisma.refreshToken.deleteMany({
+      where: { user_id: userId }
+    });
+
+    await prisma.userAccess.deleteMany({
+      where: { user_id: userId }
+    });
+
+    // ✅ Then delete user
+    await prisma.user.delete({
+      where: { id: userId }
+    });
 
     await logTransaction(req);
 
-    res.status(200).json({ success: true, message: "User deleted successfully" });
+    res.status(200).json({
+      success: true,
+      message: "User deleted successfully"
+    });
   } catch (err) {
     await logError(req, err);
     res.status(500).json({ success: false, error: err.message });
