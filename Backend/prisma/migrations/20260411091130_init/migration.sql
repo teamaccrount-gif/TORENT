@@ -14,17 +14,6 @@ CREATE TABLE "Alarm" (
 );
 
 -- CreateTable
-CREATE TABLE "History" (
-    "id" SERIAL NOT NULL,
-    "telemetry_id" INTEGER NOT NULL,
-    "value" DOUBLE PRECISION NOT NULL,
-    "quality" INTEGER NOT NULL,
-    "timestamp" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "History_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "TelemetryData" (
     "id" SERIAL NOT NULL,
     "country" TEXT NOT NULL,
@@ -38,42 +27,6 @@ CREATE TABLE "TelemetryData" (
     "tag" TEXT NOT NULL,
 
     CONSTRAINT "TelemetryData_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "EventLog" (
-    "id" SERIAL NOT NULL,
-    "username" TEXT,
-    "endpoint" TEXT,
-    "method" TEXT,
-    "params" JSONB,
-    "created_at" TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP,
-    "request_id" UUID DEFAULT gen_random_uuid(),
-
-    CONSTRAINT "event_logs_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "TransactionLog" (
-    "id" SERIAL NOT NULL,
-    "username" TEXT,
-    "endpoint" TEXT,
-    "created_at" TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP,
-    "request_id" UUID DEFAULT gen_random_uuid(),
-
-    CONSTRAINT "transaction_logs_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "ErrorLog" (
-    "id" SERIAL NOT NULL,
-    "username" TEXT,
-    "endpoint" TEXT,
-    "error" TEXT,
-    "created_at" TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP,
-    "request_id" UUID DEFAULT gen_random_uuid(),
-
-    CONSTRAINT "error_logs_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -361,6 +314,72 @@ CREATE TABLE "refresh_tokens" (
     CONSTRAINT "refresh_tokens_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "login_logs" (
+    "id" SERIAL NOT NULL,
+    "user_id" INTEGER,
+    "email" TEXT NOT NULL,
+    "status" TEXT NOT NULL,
+    "failure_reason" TEXT,
+    "ip_address" TEXT,
+    "user_agent" TEXT,
+    "os" TEXT,
+    "browser" TEXT,
+    "device_type" TEXT,
+    "login_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "request_id" TEXT,
+
+    CONSTRAINT "login_logs_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "event_logs" (
+    "id" SERIAL NOT NULL,
+    "user_id" INTEGER,
+    "email" TEXT,
+    "role" TEXT,
+    "endpoint" TEXT,
+    "method" TEXT,
+    "params" JSONB,
+    "ip_address" TEXT,
+    "user_agent" TEXT,
+    "request_id" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "event_logs_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "transaction_logs" (
+    "id" SERIAL NOT NULL,
+    "user_id" INTEGER,
+    "email" TEXT,
+    "role" TEXT,
+    "endpoint" TEXT,
+    "method" TEXT,
+    "ip_address" TEXT,
+    "request_id" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "transaction_logs_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "error_logs" (
+    "id" SERIAL NOT NULL,
+    "user_id" INTEGER,
+    "email" TEXT,
+    "role" TEXT,
+    "endpoint" TEXT,
+    "method" TEXT,
+    "error" TEXT,
+    "ip_address" TEXT,
+    "request_id" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "error_logs_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE INDEX "Alarm_tag_timestamp2_idx" ON "Alarm"("tag", "timestamp2");
 
@@ -430,20 +449,44 @@ CREATE UNIQUE INDEX "user_access_user_id_key" ON "user_access"("user_id");
 -- CreateIndex
 CREATE UNIQUE INDEX "refresh_tokens_token_key" ON "refresh_tokens"("token");
 
--- AddForeignKey
-ALTER TABLE "History" ADD CONSTRAINT "History_telemetry_id_fkey" FOREIGN KEY ("telemetry_id") REFERENCES "TelemetryData"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+-- CreateIndex
+CREATE INDEX "login_logs_email_idx" ON "login_logs"("email");
+
+-- CreateIndex
+CREATE INDEX "login_logs_login_at_idx" ON "login_logs"("login_at");
+
+-- CreateIndex
+CREATE INDEX "login_logs_ip_address_idx" ON "login_logs"("ip_address");
+
+-- CreateIndex
+CREATE INDEX "event_logs_email_idx" ON "event_logs"("email");
+
+-- CreateIndex
+CREATE INDEX "event_logs_created_at_idx" ON "event_logs"("created_at");
+
+-- CreateIndex
+CREATE INDEX "transaction_logs_email_idx" ON "transaction_logs"("email");
+
+-- CreateIndex
+CREATE INDEX "transaction_logs_created_at_idx" ON "transaction_logs"("created_at");
+
+-- CreateIndex
+CREATE INDEX "error_logs_email_idx" ON "error_logs"("email");
+
+-- CreateIndex
+CREATE INDEX "error_logs_created_at_idx" ON "error_logs"("created_at");
 
 -- AddForeignKey
 ALTER TABLE "users" ADD CONSTRAINT "users_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "role_permissions" ADD CONSTRAINT "role_permissions_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "role_permissions" ADD CONSTRAINT "role_permissions_permission_id_fkey" FOREIGN KEY ("permission_id") REFERENCES "permissions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "user_access" ADD CONSTRAINT "user_access_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "role_permissions" ADD CONSTRAINT "role_permissions_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "user_access" ADD CONSTRAINT "user_access_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "refresh_tokens" ADD CONSTRAINT "refresh_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
