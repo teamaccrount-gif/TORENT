@@ -6,7 +6,7 @@ import { useAppDispatch } from '../../Redux/Store';
 import { logoutUser } from '../../Redux/Slices/authSlice';
 
 export const Navbar: React.FC = () => {
-  const { user, role } = useAuth();
+  const { user, role, logout } = useAuth();
   const dispatch = useAppDispatch();
   const handleLogout = async () => {
     const refreshToken = localStorage.getItem('refresh_token');
@@ -15,6 +15,7 @@ export const Navbar: React.FC = () => {
     } finally {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refresh_token');
+      logout();
     }
   };
 

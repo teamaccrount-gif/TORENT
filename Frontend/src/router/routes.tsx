@@ -8,7 +8,6 @@ import Dashboard from '../pages/Dashboard';
 import RegisterUser from '../pages/RegisterUser';
 import ManageUsers from '../pages/ManageUsers';
 import ManageUserDetail from '../pages/ManageUserDetail';
-import MapPage from '../pages/Map';
 import TableView from '../pages/tables/TableView';
 import Raw from '../pages/filters/Raw';
 import Aggregated from '../pages/filters/Aggregated';
@@ -57,11 +56,6 @@ const router = createBrowserRouter([
             path: 'tables/:tableType',
             element: <ProtectedRoute action="allowedTables" />,
             children: [{ index: true, element: <TableView /> }],
-          },
-          {
-            path: 'map',
-            element: <ProtectedRoute action="canAccessDashboard" />,
-            children: [{ index: true, element: <MapPage /> }],
           },
           // Filter routes accessible according to canAccessFilters
           {

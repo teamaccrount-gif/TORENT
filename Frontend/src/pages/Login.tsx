@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { FormField } from '../components/ui/FormField';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
+import { useAuth } from '../hooks/useAuth';
 import { useAppDispatch } from '../Redux/Store';
 import { loginUser } from '../Redux/Slices/authSlice';
 
-import type { ApiResponse, User } from '../types';
+import type { User, ApiResponse } from '../types';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -14,6 +15,8 @@ const Login: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+
+  const { login } = useAuth();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
@@ -54,11 +57,21 @@ const Login: React.FC = () => {
 
       if (loginUser.fulfilled.match(resultAction)) {
         const responseData = resultAction.payload as ApiResponse<User> | { success?: boolean; message?: string; data?: any; user?: User };
+        const responseBody = (responseData as any)?.data ?? responseData;
+        const rawUser =
+          responseBody?.user ??
+          (responseData as any)?.user ??
+          (responseBody?.email && responseBody?.role ? responseBody : null);
+        const userData = rawUser
+          ? { ...rawUser, role: rawUser.role?.toUpperCase() as User['role'] }
+          : null;
 
         console.log('[AUTH][LOGIN] Fulfilled response:', responseData);
+        console.log('[AUTH][LOGIN] Parsed user data:', userData);
 
-        if ((responseData as any).success !== false) {
-          console.log('[AUTH][LOGIN] Login accepted, navigating to dashboard.');
+        if ((responseData as any).success !== false && userData) {
+          console.log('[AUTH][LOGIN] Login accepted, storing user and navigating to dashboard.');
+          login(userData as User);
           navigate('/dashboard', { replace: true });
         } else {
           console.warn('[AUTH][LOGIN] Login rejected by response payload.');

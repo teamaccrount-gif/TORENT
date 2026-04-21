@@ -46,15 +46,16 @@ const ROLE_MATCHERS: Record<Role, string[]> = {
   'operator': ["operator", "op"],
 };
 
-export const LEVEL_HIERARCHY: RegistrationAccessLevel[] = ['country', 'region', 'city', 'station', 'component'];
+export const LEVEL_HIERARCHY: RegistrationAccessLevel[] = ['country', 'region', 'city', 'station'];
 
 export const canViewTableAtLevel = (userLevel: RegistrationAccessLevel, tableLevel: RegistrationAccessLevel): boolean => {
   const userIdx = LEVEL_HIERARCHY.indexOf(userLevel);
   const tableIdx = LEVEL_HIERARCHY.indexOf(tableLevel);
   
-  // Rule: Users can see tables strictly below their current level.
+  // Rule: Cannot see table level X or above.
+  // Must see tables BELOW user level.
   // lower index = higher level (country=0, region=1...)
-  // So tableIdx must be strictly GREATER than userIdx.
+  // So tableIdx must be GREATER than userIdx.
   return tableIdx > userIdx;
 };
 
@@ -84,7 +85,7 @@ export const normalizeRegions = (value: unknown): RegionOption[] => {
   return uniqueBy(
     toArray<Record<string, unknown>>(value)
       .map((record) => ({
-        region_id: getRecordValue(record, ["id", "region_id", "name"]),
+        region_id: getRecordValue(record, ["id", "region_id"]),
         region_name: getRecordValue(record, ["name", "region_name"]),
       }))
       .filter((region) => region.region_id && region.region_name),
@@ -96,7 +97,7 @@ export const normalizeAreas = (value: unknown): AreaOption[] => {
   return uniqueBy(
     toArray<Record<string, unknown>>(value)
       .map((record) => ({
-        area_id: getRecordValue(record, ["id", "area_id", "name"]),
+        area_id: getRecordValue(record, ["id", "area_id"]),
         area_name: getRecordValue(record, ["name", "area_name"]),
         region_name: getRecordValue(record, ["region", "region_name"]),
       }))
@@ -109,7 +110,7 @@ export const normalizeStations = (value: unknown): RegistrationStationOption[] =
   return uniqueBy(
     toArray<Record<string, unknown>>(value)
       .map((record) => ({
-        station_id: getRecordValue(record, ["id", "station_id", "name"]),
+        station_id: getRecordValue(record, ["id", "station_id"]),
         station_name: getRecordValue(record, ["name", "station_name"]),
         area_name: getRecordValue(record, ["area", "area_name"]),
       }))

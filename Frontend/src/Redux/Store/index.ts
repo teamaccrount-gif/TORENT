@@ -6,9 +6,6 @@ import authReducer from "../Slices/authSlice";
 import registrationReducer from "../Slices/registrationSlice";
 import manageReducer from "../Slices/manageSlice";
 import tablesReducer from "../Slices/tablesSlice";
-import mapReducer from "../Slices/mapSlice";
-import dropdownReducer from "../Slices/dropdownSlice";
-
 
 export const store = configureStore({
   reducer: {
@@ -18,8 +15,6 @@ export const store = configureStore({
     registrationSlice: registrationReducer,
     manageSlice: manageReducer,
     tablesSlice: tablesReducer,
-    mapSlice: mapReducer,
-    dropdownSlice: dropdownReducer,
   },
 });
 
