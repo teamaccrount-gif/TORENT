@@ -45,6 +45,7 @@ export const API_URLS = {
   TABLE_COMPRESSOR: `${API_BASE}/api/v1/tables/compressor`,
   TABLE_DRS: `${API_BASE}/api/v1/tables/drs`,
   TABLE_DOMESTIC: `${API_BASE}/api/v1/tables/domestic`,
+<<<<<<< HEAD
 
   //map data apis
   MAP_DATA: `${API_BASE}/api/v1/gis/map`,
@@ -53,6 +54,8 @@ export const API_URLS = {
   REGION_DROPDOWN: `${API_BASE}/api/v1/tables/all-regions`,
   AREA_DROPDOWN: `${API_BASE}/api/v1/tables/areas-by-region/:region`,
   STATION_DROPDOWN: `${API_BASE}/api/v1/tables/stations-by-area/:area`,
+=======
+>>>>>>> 3cd2829 (Revert "feat: implement telemetry visualization component and initialize interactive map module")
 } as const;
 
 export default API_URLS;

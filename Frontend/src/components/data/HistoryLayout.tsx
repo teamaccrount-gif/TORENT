@@ -1,7 +1,11 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+<<<<<<< HEAD
 import { Button } from "../ui/button";
+=======
+import { Button } from "../ui/Button";
+>>>>>>> 3cd2829 (Revert "feat: implement telemetry visualization component and initialize interactive map module")
 import { DataVisualizer } from "./DataVisualizer";
 import { useTelemetryFilter } from "../../context/TelemetryFilterContext";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";

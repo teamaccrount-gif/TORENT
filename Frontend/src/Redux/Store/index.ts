@@ -6,7 +6,10 @@ import authReducer from "../Slices/authSlice";
 import registrationReducer from "../Slices/registrationSlice";
 import manageReducer from "../Slices/manageSlice";
 import tablesReducer from "../Slices/tablesSlice";
+<<<<<<< HEAD
 import mapReducer from "../Slices/mapSlice";
+=======
+>>>>>>> 3cd2829 (Revert "feat: implement telemetry visualization component and initialize interactive map module")
 
 export const store = configureStore({
   reducer: {
@@ -16,7 +19,10 @@ export const store = configureStore({
     registrationSlice: registrationReducer,
     manageSlice: manageReducer,
     tablesSlice: tablesReducer,
+<<<<<<< HEAD
     mapSlice: mapReducer,
+=======
+>>>>>>> 3cd2829 (Revert "feat: implement telemetry visualization component and initialize interactive map module")
   },
 });
 

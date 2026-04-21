@@ -45,6 +45,7 @@ const ROLE_MATCHERS: Record<Role, string[]> = {
 };
 
 export const LEVEL_HIERARCHY: RegistrationAccessLevel[] = ['country', 'region', 'city', 'station'];
+<<<<<<< HEAD
 
 export const getEffectiveLevel = (user: any): RegistrationAccessLevel => {
   const role = String(user?.role || '').toLowerCase();
@@ -56,17 +57,27 @@ export const getEffectiveLevel = (user: any): RegistrationAccessLevel => {
   
   return 'station';
 };
+=======
+>>>>>>> 3cd2829 (Revert "feat: implement telemetry visualization component and initialize interactive map module")
 
 export const canViewTableAtLevel = (userLevel: RegistrationAccessLevel, tableLevel: RegistrationAccessLevel): boolean => {
   const userIdx = LEVEL_HIERARCHY.indexOf(userLevel);
   const tableIdx = LEVEL_HIERARCHY.indexOf(tableLevel);
   
+<<<<<<< HEAD
   if (userIdx === -1 || tableIdx === -1) return false;
   
   // Rule: User can see tables at their level or deeper in the hierarchy
   // lower index = higher level (country=0, region=1...)
   // So tableIdx must be GREATER than or EQUAL to userIdx.
   return tableIdx >= userIdx;
+=======
+  // Rule: Cannot see table level X or above.
+  // Must see tables BELOW user level.
+  // lower index = higher level (country=0, region=1...)
+  // So tableIdx must be GREATER than userIdx.
+  return tableIdx > userIdx;
+>>>>>>> 3cd2829 (Revert "feat: implement telemetry visualization component and initialize interactive map module")
 };
 
 const uniqueBy = <T,>(items: T[], getKey: (item: T) => string) => {
@@ -95,6 +106,7 @@ export const normalizeRoles = (value: unknown): RoleOption[] => {
 export const normalizeRegions = (value: unknown): RegionOption[] => {
   return uniqueBy(
     toArray<Record<string, unknown>>(value)
+<<<<<<< HEAD
       .map((record) => {
         const region_name = getRecordValue(record, ["name", "region_name"]);
         const region_id = getRecordValue(record, ["id", "region_id"]) || region_name;
@@ -102,12 +114,21 @@ export const normalizeRegions = (value: unknown): RegionOption[] => {
       })
       .filter((region) => region.region_name),
     (region) => region.region_name
+=======
+      .map((record) => ({
+        region_id: getRecordValue(record, ["id", "region_id"]),
+        region_name: getRecordValue(record, ["name", "region_name"]),
+      }))
+      .filter((region) => region.region_id && region.region_name),
+    (region) => region.region_id
+>>>>>>> 3cd2829 (Revert "feat: implement telemetry visualization component and initialize interactive map module")
   );
 };
 
 export const normalizeAreas = (value: unknown): AreaOption[] => {
   return uniqueBy(
     toArray<Record<string, unknown>>(value)
+<<<<<<< HEAD
       .map((record) => {
         const area_name = getRecordValue(record, ["name", "area_name"]);
         const area_id = getRecordValue(record, ["id", "area_id"]) || area_name;
@@ -116,12 +137,22 @@ export const normalizeAreas = (value: unknown): AreaOption[] => {
       })
       .filter((area) => area.area_name),
     (area) => area.area_name
+=======
+      .map((record) => ({
+        area_id: getRecordValue(record, ["id", "area_id"]),
+        area_name: getRecordValue(record, ["name", "area_name"]),
+        region_name: getRecordValue(record, ["region", "region_name"]),
+      }))
+      .filter((area) => area.area_id && area.area_name),
+    (area) => `${area.region_name}-${area.area_name}`
+>>>>>>> 3cd2829 (Revert "feat: implement telemetry visualization component and initialize interactive map module")
   );
 };
 
 export const normalizeStations = (value: unknown): RegistrationStationOption[] => {
   return uniqueBy(
     toArray<Record<string, unknown>>(value)
+<<<<<<< HEAD
       .map((record) => {
         const station_name = getRecordValue(record, ["name", "station_name"]);
         const station_id = getRecordValue(record, ["id", "station_id"]) || station_name;
@@ -130,6 +161,15 @@ export const normalizeStations = (value: unknown): RegistrationStationOption[] =
       })
       .filter((station) => station.station_name),
     (station) => station.station_name
+=======
+      .map((record) => ({
+        station_id: getRecordValue(record, ["id", "station_id"]),
+        station_name: getRecordValue(record, ["name", "station_name"]),
+        area_name: getRecordValue(record, ["area", "area_name"]),
+      }))
+      .filter((station) => station.station_id && station.station_name),
+    (station) => `${station.area_name}-${station.station_name}`
+>>>>>>> 3cd2829 (Revert "feat: implement telemetry visualization component and initialize interactive map module")
   );
 };
 

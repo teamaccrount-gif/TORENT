@@ -6,11 +6,14 @@ import { canViewTableAtLevel, getEffectiveLevel } from '../../utils/registration
 import { CommonTable } from '../../components/tables/CommonTable';
 import * as actions from '../../Redux/Slices/tablesSlice';
 import { useAuth } from '../../hooks/useAuth';
+<<<<<<< HEAD
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, Database } from 'lucide-react';
 
 import { Skeleton } from 'boneyard-js/react';
+=======
+>>>>>>> 3cd2829 (Revert "feat: implement telemetry visualization component and initialize interactive map module")
 
 const TableView: React.FC = () => {
   const { tableType } = useParams<{ tableType: string }>();
@@ -18,7 +21,11 @@ const TableView: React.FC = () => {
   const dispatch = useAppDispatch();
 
   const slug = tableType?.toLowerCase() || '';
+<<<<<<< HEAD
   const userLevel = getEffectiveLevel(user);
+=======
+  const userLevel = user?.level || 'station';
+>>>>>>> 3cd2829 (Revert "feat: implement telemetry visualization component and initialize interactive map module")
   const tableLevel = TABLE_LEVELS[slug];
   const isAllowed = tableLevel ? canViewTableAtLevel(userLevel, tableLevel) : false;
 
