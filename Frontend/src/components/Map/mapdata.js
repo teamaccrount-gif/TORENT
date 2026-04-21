@@ -1,4 +1,4 @@
-var simplemaps_countrymap_mapdata={
+window.simplemaps_countrymap_mapdata={
   main_settings: {
    //General settings
     width: "responsive", //'700' or 'responsive'
