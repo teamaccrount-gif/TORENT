@@ -47,19 +47,19 @@ export const TABLE_LEVELS: Record<string, RegistrationAccessLevel> = {
   region: 'region',
   area: 'city',
   station: 'station',
-  cgs: 'component',
-  device: 'component',
-  png: 'component',
-  lcng: 'component',
-  industrial: 'component',
-  commercial: 'component',
-  dispenser: 'component',
-  compressor: 'component',
-  drs: 'component',
-  domestic: 'component',
+  cgs: 'station', // Technical tables are treated as station level or below
+  device: 'station',
+  png: 'station',
+  lcng: 'station',
+  industrial: 'station',
+  commercial: 'station',
+  dispenser: 'station',
+  compressor: 'station',
+  drs: 'station',
+  domestic: 'station',
 };
 
 export const ALL_TECHNICAL_TABLES = [
-  'region', 'area', 'station', 'cgs', 'device', 'png', 
+  'country', 'region', 'area', 'station', 'cgs', 'device', 'png', 
   'lcng', 'industrial', 'commercial', 'dispenser', 'compressor', 'drs', 'domestic'
 ];

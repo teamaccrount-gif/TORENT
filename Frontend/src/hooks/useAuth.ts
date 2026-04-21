@@ -1,24 +1,11 @@
-import { useMemo } from 'react';
-import { useAppSelector } from '../Redux/Store';
-import type { Role, User } from '../types';
+import { useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
+import type { AuthContextType } from '../types';
 
-export interface ReduxAuthState {
-  user: User | null;
-  role: Role | null;
-  isAuthenticated: boolean;
-}
-
-export const useAuth = (): ReduxAuthState => {
-  const user = useAppSelector((state) => state.authSlice.user);
-  const role = useAppSelector((state) => state.authSlice.role);
-  const isAuthenticated = useAppSelector((state) => state.authSlice.isAuthenticated);
-
-  return useMemo(
-    () => ({
-      user,
-      role,
-      isAuthenticated,
-    }),
-    [user, role, isAuthenticated]
-  );
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };

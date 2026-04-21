@@ -6,7 +6,6 @@ import { canViewTableAtLevel } from '../../utils/registrationHelpers';
 import { CommonTable } from '../../components/tables/CommonTable';
 import * as actions from '../../Redux/Slices/tablesSlice';
 import { useAuth } from '../../hooks/useAuth';
-import type { Role } from '../../types';
 
 const TableView: React.FC = () => {
   const { tableType } = useParams<{ tableType: string }>();
@@ -14,8 +13,7 @@ const TableView: React.FC = () => {
   const dispatch = useAppDispatch();
 
   const slug = tableType?.toLowerCase() || '';
-  const userLevel = user?.level || 'country';
-  const role = user?.role.toLowerCase() as Role;
+  const userLevel = user?.level || 'station';
   const tableLevel = TABLE_LEVELS[slug];
   const isAllowed = tableLevel ? canViewTableAtLevel(userLevel, tableLevel) : false;
 
