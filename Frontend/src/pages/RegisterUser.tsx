@@ -4,23 +4,17 @@ import { useAuth } from '../hooks/useAuth';
 import type { Role } from '../types';
 
 const RegisterUser: React.FC = () => {
-  const { role } = useAuth();
+  const { user } = useAuth();
+  const role = user?.role.toLowerCase() as Role;
   
-  const allowedTargetRoles = useMemo<Exclude<Role, 'SUPER_ADMIN'>[]>(() => {
-    switch (role) {
-      case 'ADMIN':
-      case 'SUPER_ADMIN':
-        return ['REGION_MANAGER', 'CITY_MANAGER', 'STATION_MANAGER'];
-      case 'REGION_MANAGER':
-        return ['CITY_MANAGER', 'STATION_MANAGER'];
-      case 'CITY_MANAGER':
-        return ['STATION_MANAGER'];
-      default:
-        return [];
+  const allowedTargetRoles = useMemo<Exclude<Role, 'super_admin'>[]>(() => {
+    if (role === 'super_admin' || role === 'admin') {
+      return ['admin', 'manager', 'engineer', 'operator'];
     }
+    return [];
   }, [role]);
 
-  const [selectedTargetRole, setSelectedTargetRole] = useState<Exclude<Role, 'SUPER_ADMIN'> | null>(
+  const [selectedTargetRole, setSelectedTargetRole] = useState<Exclude<Role, 'super admin'> | null>(
     allowedTargetRoles.length > 0 ? allowedTargetRoles[0] : null
   );
 

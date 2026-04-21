@@ -30,18 +30,33 @@ const toArray = <T>(value: unknown): T[] => {
   return [];
 };
 
-export const ROLE_LEVEL_MAP: Record<Exclude<Role, "SUPER_ADMIN">, RegistrationAccessLevel> = {
-  ADMIN: "region_level",
-  REGION_MANAGER: "region_level",
-  CITY_MANAGER: "city_level",
-  STATION_MANAGER: "station_level",
+export const ROLE_LEVEL_MAP: Record<Role, RegistrationAccessLevel> = {
+  'super_admin': 'country',
+  'admin': 'country',
+  'manager': 'region',
+  'engineer': 'city',
+  'operator': 'station',
 };
 
-const ROLE_MATCHERS: Record<Exclude<Role, "SUPER_ADMIN">, string[]> = {
-  ADMIN: ["admin", "super_admin", "super admin"],
-  REGION_MANAGER: ["region_manager", "region manager", "regional manager", "rm"],
-  CITY_MANAGER: ["city_manager", "city manager", "cm"],
-  STATION_MANAGER: ["station_manager", "station manager", "sm"],
+const ROLE_MATCHERS: Record<Role, string[]> = {
+  'super_admin': ["super admin", "superadmin", "sa"],
+  'admin': ["admin", "administrator"],
+  'manager': ["manager", "mgr"],
+  'engineer': ["engineer", "eng"],
+  'operator': ["operator", "op"],
+};
+
+export const LEVEL_HIERARCHY: RegistrationAccessLevel[] = ['country', 'region', 'city', 'station'];
+
+export const canViewTableAtLevel = (userLevel: RegistrationAccessLevel, tableLevel: RegistrationAccessLevel): boolean => {
+  const userIdx = LEVEL_HIERARCHY.indexOf(userLevel);
+  const tableIdx = LEVEL_HIERARCHY.indexOf(tableLevel);
+  
+  // Rule: Cannot see table level X or above.
+  // Must see tables BELOW user level.
+  // lower index = higher level (country=0, region=1...)
+  // So tableIdx must be GREATER than userIdx.
+  return tableIdx > userIdx;
 };
 
 const uniqueBy = <T,>(items: T[], getKey: (item: T) => string) => {

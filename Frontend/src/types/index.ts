@@ -1,10 +1,13 @@
-export type Role = 'ADMIN' | 'SUPER_ADMIN' | 'REGION_MANAGER' | 'CITY_MANAGER' | 'STATION_MANAGER';
+export type Role = 'super_admin' | 'admin' | 'manager' | 'engineer' | 'operator';
+
+export type RegistrationAccessLevel = 'country' | 'region' | 'city' | 'station';
 
 export interface User {
   id: string | number;
   email: string;
   phone: string;
-  role: Role | { name: string };
+  role: Role;
+  level: RegistrationAccessLevel;
   first_name?: string;
   last_name?: string;
   isActive?: boolean;
@@ -77,8 +80,6 @@ export interface AuthContextType {
   login: (user: User) => void;
   logout: () => void;
 }
-
-export type RegistrationAccessLevel = 'region_level' | 'city_level' | 'station_level';
 
 export interface RegistrationAccessPayload {
   level: RegistrationAccessLevel;

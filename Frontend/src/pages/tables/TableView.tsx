@@ -1,19 +1,21 @@
 import React, { useEffect } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../Redux/Store';
-import { useAuth } from '../../hooks/useAuth';
-import { PERMISSIONS } from '../../config/permissions';
+import { PERMISSIONS, TABLE_LEVELS } from '../../config/permissions';
+import { canViewTableAtLevel } from '../../utils/registrationHelpers';
 import { CommonTable } from '../../components/tables/CommonTable';
 import * as actions from '../../Redux/Slices/tablesSlice';
+import { useAuth } from '../../hooks/useAuth';
 
 const TableView: React.FC = () => {
   const { tableType } = useParams<{ tableType: string }>();
-  const { role } = useAuth();
+  const { user } = useAuth();
   const dispatch = useAppDispatch();
-  
+
   const slug = tableType?.toLowerCase() || '';
-  const perms = role ? PERMISSIONS[role] : null;
-  const isAllowed = perms?.allowedTables.includes(slug) || false;
+  const userLevel = user?.level || 'station';
+  const tableLevel = TABLE_LEVELS[slug];
+  const isAllowed = tableLevel ? canViewTableAtLevel(userLevel, tableLevel) : false;
 
   const actionName = actionNameGenerator(slug);
   const action = (actions as any)[actionName];
