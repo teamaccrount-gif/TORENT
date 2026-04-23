@@ -127,8 +127,7 @@ export const getMapData = async (req, res) => {
 
     const regions = await prisma.$queryRaw`SELECT * FROM get_regions_geojson()`;
     const areas = await prisma.$queryRaw`SELECT * FROM get_areas_geojson()`;
-    const stations =
-      await prisma.$queryRaw`SELECT * FROM get_stations_geojson()`;
+    const stations = await prisma.$queryRaw`SELECT * FROM get_stations_geojson()`;
 
     // Build GeoJSON FeatureCollection — Leaflet standard format
     const toFeatureCollection = (items, geometryField, geometryType) => ({

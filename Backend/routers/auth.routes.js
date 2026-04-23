@@ -1,7 +1,7 @@
 import express from "express";
 
 import { login, logout, refreshToken } from "../controllers/auth.controller.js";
-import { generateId } from "../middlewares/filter.generateid.js";
+import { generateId } from "../middlewares/generateid.js";
 
 const router = express.Router();
 

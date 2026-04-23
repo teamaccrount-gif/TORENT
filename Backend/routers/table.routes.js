@@ -1,7 +1,7 @@
 import express from "express";
 
 
-import { generateId } from "../middlewares/filter.generateid.js";
+import { generateId } from "../middlewares/generateid.js";
 import { authenticate } from "../middlewares/authenticate.js";
 import { applyLevelAccess } from "../middlewares/levelAccess.js";
 import {

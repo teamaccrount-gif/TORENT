@@ -1,4 +1,5 @@
 import express from "express";
+
 import {
   getMapData,
   updateAreaBoundary,
@@ -7,12 +8,12 @@ import {
 } from "../controllers/gis.controller.js";
 import { authenticate } from "../middlewares/authenticate.js";
 import { authorize } from "../middlewares/authorize.js";
-import { generateId } from "../middlewares/filter.generateid.js";
+import { generateId } from "../middlewares/generateId.js";
 
 const router = express.Router();
 
 // Public read — frontend map fetches this
-router.get("/map", generateId, authenticate, getMapData);
+router.get("/", generateId, authenticate, getMapData);
 
 // Admin only — update coordinates
 router.put("/station/:name/location", generateId, authenticate, authorize("update_location"), updateStationLocation);

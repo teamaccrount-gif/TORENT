@@ -10,7 +10,7 @@ import {
 } from "../controllers/user.controller.js";
 import { authenticate } from "../middlewares/authenticate.js";
 import { authorize } from "../middlewares/authorize.js";
-import { generateId } from "../middlewares/filter.generateid.js";
+import { generateId } from "../middlewares/generateid.js";
 
 const router = express.Router();
 

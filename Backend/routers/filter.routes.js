@@ -1,7 +1,7 @@
 import express from "express";
 
-import { generateId } from "../middlewares/filter.generateid.js";
-import { getAggrigationData, getDelta, getRawData, getTags } from "../controllers/filter.controller.js";
+import { generateId } from "../middlewares/generateid.js";
+import { getAggrigationData, getDelta, getLatestData, getRawData, getTags } from "../controllers/filter.controller.js";
 
 const router = express.Router();
 
@@ -12,5 +12,7 @@ router.post("/raw", generateId, getRawData);
 router.post("/aggregation", generateId, getAggrigationData);
 
 router.post("/delta", generateId, getDelta);
+
+router.post("/latest", generateId, getLatestData);
 
 export default router;
