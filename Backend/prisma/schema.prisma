@@ -273,7 +273,7 @@ model RefreshToken {
   user_id    Int
   expires_at DateTime
   created_at DateTime @default(now())
-  user       User     @relation(fields: [user_id], references: [id])
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@map("refresh_tokens")
 }
@@ -282,7 +282,7 @@ model LoginLog {
   id             Int      @id @default(autoincrement())
   user_id        Int?
   email          String
-  status         String   // "success" or "failed"
+  status         String
   failure_reason String?
   ip_address     String?
   user_agent     String?
@@ -343,6 +343,7 @@ model ErrorLog {
   ip_address String?
   request_id String?
   created_at DateTime @default(now())
+  user_agent String?
 
   @@index([email])
   @@index([created_at])
@@ -356,4 +357,15 @@ model spatial_ref_sys {
   auth_srid Int?
   srtext    String? @db.VarChar(2048)
   proj4text String? @db.VarChar(2048)
+}
+
+/// This table is a partition table and requires additional setup for migrations. Visit https://pris.ly/d/partition-tables for more info.
+model History {
+  id           BigInt   @default(autoincrement())
+  telemetry_id Int
+  value        Float
+  quality      Int
+  timestamp    DateTime @db.Timestamp(6)
+
+  @@id([id, timestamp])
 }
