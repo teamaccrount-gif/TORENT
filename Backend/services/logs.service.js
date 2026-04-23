@@ -65,7 +65,7 @@ export const logError = async (req, err, userOverride = {}) => {
         error: err.message,
       },
     });
-  } catch (logErr) {
-    console.error("ErrorLog error:", logErr.message);
+  } catch (err) {
+    console.error("ErrorLog error:", err.message);
   }
 };
