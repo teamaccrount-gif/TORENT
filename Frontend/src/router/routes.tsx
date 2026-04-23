@@ -4,7 +4,8 @@ import { ProtectedRoute } from '../components/layout/ProtectedRoute';
 import { Shell } from '../components/layout/Shell';
 
 import Login from '../pages/Login';
-import Dashboard from '../pages/Dashboard';
+import DynamicTableView from '../components/dashboard/DynamicTableView';
+import { DashboardRedirect } from '../components/dashboard/DashboardRedirect';
 import RegisterUser from '../pages/RegisterUser';
 import ManageUsers from '../pages/ManageUsers';
 import ManageUserDetail from '../pages/ManageUserDetail';
@@ -12,6 +13,7 @@ import TableView from '../pages/tables/TableView';
 import Raw from '../pages/filters/Raw';
 import Aggregated from '../pages/filters/Aggregated';
 import Delta from '../pages/filters/Delta';
+import MapView from '../components/Map/MapView';
 
 const router = createBrowserRouter([
   {
@@ -30,11 +32,18 @@ const router = createBrowserRouter([
             index: true,
             element: <Navigate to="/dashboard" replace />,
           },
-          // Dashboard accessible by all authenticated users
           {
             path: 'dashboard',
             element: <ProtectedRoute action="canAccessDashboard" />,
-            children: [{ index: true, element: <Dashboard /> }],
+            children: [
+              { index: true, element: <DashboardRedirect /> },
+              { path: ':view', element: <DynamicTableView /> }
+            ],
+          },
+          {
+            path: 'map',
+            element: <ProtectedRoute />, // Accessible to all authenticated users
+            children: [{ index: true, element: <MapView /> }],
           },
           // Registration route requires canCreate elements
           {

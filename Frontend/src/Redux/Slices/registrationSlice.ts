@@ -1,16 +1,11 @@
-import { createCommonAsyncThunk } from '../../utils/ReduxUtils/commonAsyncThunk';
+import { createCommonAsyncThunk, createDynamicAsyncThunk } from '../../utils/ReduxUtils/commonAsyncThunk';
 import { CommonReduxSliceMaker } from '../../utils/ReduxUtils/commonSliceMaker';
 import { API_URLS } from '../../utils/apiUrl';
 
-export const fetchCities = createCommonAsyncThunk(
-  'fetchCities',
-  API_URLS.TABLES_AREA,
-  'registrationSlice'
-);
-
-export const fetchStations = createCommonAsyncThunk(
-  'fetchStations',
-  API_URLS.TABLES_STATION,
+// Static thunks (URLs don't change)
+export const fetchRegions = createCommonAsyncThunk(
+  'fetchRegions',
+  API_URLS.REGION_DROPDOWN,
   'registrationSlice'
 );
 
@@ -20,51 +15,43 @@ export const fetchRoles = createCommonAsyncThunk(
   'registrationSlice'
 );
 
-export const fetchRegions = createCommonAsyncThunk(
-  'fetchRegions',
-  API_URLS.TABLES_REGION,
-  'registrationSlice'
-);
-
-export const fetchAreas = createCommonAsyncThunk(
-  'fetchAreas',
-  API_URLS.TABLES_AREA,
-  'registrationSlice'
-);
-
-export const fetchRegistrationStations = createCommonAsyncThunk(
-  'fetchRegistrationStations',
-  API_URLS.TABLES_STATION,
-  'registrationSlice'
-);
-
-const realAddUser = createCommonAsyncThunk(
+export const addUser = createCommonAsyncThunk(
   'addUser',
   API_URLS.ADD_USER,
   'registrationSlice'
 );
-export const addUser = realAddUser;
+
+// Dynamic thunks — URL path param is injected at dispatch time via `urlParam`
+// Dispatch: dispatch(fetchAreasByRegion({ method: 'GET', urlParam: 'r1' }))
+export const fetchAreasByRegion = createDynamicAsyncThunk(
+  'fetchAreasByRegion',
+  (options) => API_URLS.AREA_DROPDOWN.replace(':region', options?.urlParam ?? ''),
+  'registrationSlice'
+);
+
+// Dispatch: dispatch(fetchStationsByArea({ method: 'GET', urlParam: 'a1' }))
+export const fetchStationsByArea = createDynamicAsyncThunk(
+  'fetchStationsByArea',
+  (options) => API_URLS.STATION_DROPDOWN.replace(':area', options?.urlParam ?? ''),
+  'registrationSlice'
+);
 
 const initialData = {
-  fetchCities: null,
-  fetchStations: null,
-  fetchRoles: null,
   fetchRegions: null,
-  fetchAreas: null,
-  fetchRegistrationStations: null,
+  fetchRoles: null,
   addUser: null,
+  fetchAreasByRegion: null,
+  fetchStationsByArea: null,
 };
 
 const registrationSlice = CommonReduxSliceMaker(
   'registrationSlice',
   {
-    fetchCities,
-    fetchStations,
-    fetchRoles,
     fetchRegions,
-    fetchAreas,
-    fetchRegistrationStations,
+    fetchRoles,
     addUser,
+    fetchAreasByRegion,
+    fetchStationsByArea,
   },
   initialData
 );

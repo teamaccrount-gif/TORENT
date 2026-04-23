@@ -32,9 +32,7 @@ const toArray = <T>(value: unknown): T[] => {
 
 export const ROLE_LEVEL_MAP: Record<Role, RegistrationAccessLevel> = {
   'super_admin': 'country',
-  'admin': 'country',
-  'manager': 'region',
-  'engineer': 'city',
+  'engineer': 'station',
   'operator': 'station',
 };
 
@@ -48,15 +46,27 @@ const ROLE_MATCHERS: Record<Role, string[]> = {
 
 export const LEVEL_HIERARCHY: RegistrationAccessLevel[] = ['country', 'region', 'city', 'station'];
 
+export const getEffectiveLevel = (user: any): RegistrationAccessLevel => {
+  const role = String(user?.role || '').toLowerCase();
+  const level = String(user?.level || '').toLowerCase();
+  
+  if (['super_admin', 'superadmin', 'admin'].includes(role)) return 'country';
+  if (level === 'city') return 'city';
+  if (LEVEL_HIERARCHY.includes(level as any)) return level as any;
+  
+  return 'station';
+};
+
 export const canViewTableAtLevel = (userLevel: RegistrationAccessLevel, tableLevel: RegistrationAccessLevel): boolean => {
   const userIdx = LEVEL_HIERARCHY.indexOf(userLevel);
   const tableIdx = LEVEL_HIERARCHY.indexOf(tableLevel);
   
-  // Rule: Cannot see table level X or above.
-  // Must see tables BELOW user level.
+  if (userIdx === -1 || tableIdx === -1) return false;
+  
+  // Rule: User can see tables at their level or deeper in the hierarchy
   // lower index = higher level (country=0, region=1...)
-  // So tableIdx must be GREATER than userIdx.
-  return tableIdx > userIdx;
+  // So tableIdx must be GREATER than or EQUAL to userIdx.
+  return tableIdx >= userIdx;
 };
 
 const uniqueBy = <T,>(items: T[], getKey: (item: T) => string) => {
@@ -72,50 +82,54 @@ const uniqueBy = <T,>(items: T[], getKey: (item: T) => string) => {
 export const normalizeRoles = (value: unknown): RoleOption[] => {
   return uniqueBy(
     toArray<Record<string, unknown>>(value)
-      .map((record) => ({
-        role_id: getRecordValue(record, ["id", "role_id"]),
-        role_name: getRecordValue(record, ["role", "role_name", "name"]),
-      }))
-      .filter((role) => role.role_id && role.role_name),
-    (role) => role.role_id
+      .map((record) => {
+        const role_name = getRecordValue(record, ["role", "role_name", "name"]);
+        const role_id = getRecordValue(record, ["id", "role_id"]) || role_name;
+        return { role_id, role_name };
+      })
+      .filter((role) => role.role_name),
+    (role) => role.role_name
   );
 };
 
 export const normalizeRegions = (value: unknown): RegionOption[] => {
   return uniqueBy(
     toArray<Record<string, unknown>>(value)
-      .map((record) => ({
-        region_id: getRecordValue(record, ["id", "region_id"]),
-        region_name: getRecordValue(record, ["name", "region_name"]),
-      }))
-      .filter((region) => region.region_id && region.region_name),
-    (region) => region.region_id
+      .map((record) => {
+        const region_name = getRecordValue(record, ["name", "region_name"]);
+        const region_id = getRecordValue(record, ["id", "region_id"]) || region_name;
+        return { region_id, region_name };
+      })
+      .filter((region) => region.region_name),
+    (region) => region.region_name
   );
 };
 
 export const normalizeAreas = (value: unknown): AreaOption[] => {
   return uniqueBy(
     toArray<Record<string, unknown>>(value)
-      .map((record) => ({
-        area_id: getRecordValue(record, ["id", "area_id"]),
-        area_name: getRecordValue(record, ["name", "area_name"]),
-        region_name: getRecordValue(record, ["region", "region_name"]),
-      }))
-      .filter((area) => area.area_id && area.area_name),
-    (area) => `${area.region_name}-${area.area_name}`
+      .map((record) => {
+        const area_name = getRecordValue(record, ["name", "area_name"]);
+        const area_id = getRecordValue(record, ["id", "area_id"]) || area_name;
+        const region_name = getRecordValue(record, ["region", "region_name"]);
+        return { area_id, area_name, region_name };
+      })
+      .filter((area) => area.area_name),
+    (area) => area.area_name
   );
 };
 
 export const normalizeStations = (value: unknown): RegistrationStationOption[] => {
   return uniqueBy(
     toArray<Record<string, unknown>>(value)
-      .map((record) => ({
-        station_id: getRecordValue(record, ["id", "station_id"]),
-        station_name: getRecordValue(record, ["name", "station_name"]),
-        area_name: getRecordValue(record, ["area", "area_name"]),
-      }))
-      .filter((station) => station.station_id && station.station_name),
-    (station) => `${station.area_name}-${station.station_name}`
+      .map((record) => {
+        const station_name = getRecordValue(record, ["name", "station_name"]);
+        const station_id = getRecordValue(record, ["id", "station_id"]) || station_name;
+        const area_name = getRecordValue(record, ["area", "area_name"]);
+        return { station_id, station_name, area_name };
+      })
+      .filter((station) => station.station_name),
+    (station) => station.station_name
   );
 };
 

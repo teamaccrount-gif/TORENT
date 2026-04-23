@@ -44,6 +44,7 @@ export const CommonTable: React.FC<CommonTableProps> = ({ type, data, loading })
     const addStation = () => hierarchy.push({ title: 'Station', dataIndex: 'station', key: 'station' });
     const addPng = () => hierarchy.push({ title: 'PNG', dataIndex: 'png', key: 'png' });
     const addDrs = () => hierarchy.push({ title: 'DRS', dataIndex: 'drs', key: 'drs' });
+    const addIndustrial = () => hierarchy.push({ title: 'Industrial', dataIndex: 'industrial', key: 'industrial' });
 
     const slug = tableType.toLowerCase();
     if (['region', 'area', 'cgs', 'station', 'png', 'lcng', 'compressor', 'dispenser', 'device', 'drs', 'industrial', 'commercial', 'domestic'].includes(slug)) addCountry();
@@ -58,7 +59,7 @@ export const CommonTable: React.FC<CommonTableProps> = ({ type, data, loading })
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-4">
+    <div className="overflow-hidden">
       <Table 
         dataSource={data} 
         columns={getColumns(type)} 
@@ -67,9 +68,9 @@ export const CommonTable: React.FC<CommonTableProps> = ({ type, data, loading })
         pagination={{ 
           pageSize: 10,
           showSizeChanger: false,
-          className: "px-6 py-4 border-t border-gray-50"
+          className: "px-6 py-4 border-t border-gray-100"
         }}
-        className="technical-table"
+        className="technical-table border-0"
       />
     </div>
   );

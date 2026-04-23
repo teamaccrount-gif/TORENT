@@ -45,6 +45,14 @@ export const API_URLS = {
   TABLE_COMPRESSOR: `${API_BASE}/api/v1/tables/compressor`,
   TABLE_DRS: `${API_BASE}/api/v1/tables/drs`,
   TABLE_DOMESTIC: `${API_BASE}/api/v1/tables/domestic`,
+
+  //map data apis
+  MAP_DATA: `${API_BASE}/api/v1/gis/map`,
+
+  //drop down endpoints
+  REGION_DROPDOWN: `${API_BASE}/api/v1/tables/all-regions`,
+  AREA_DROPDOWN: `${API_BASE}/api/v1/tables/areas-by-region/:region`,
+  STATION_DROPDOWN: `${API_BASE}/api/v1/tables/stations-by-area/:area`,
 } as const;
 
 export default API_URLS;

@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FormField } from '../components/ui/FormField';
-import { Input } from '../components/ui/Input';
-import { Button } from '../components/ui/Button';
+import { FormField } from '../components/ui/formfield';
+import { Input } from '../components/ui/input';
+import { Button } from '../components/ui/button';
 import { useAuth } from '../hooks/useAuth';
 import { useAppDispatch } from '../Redux/Store';
 import { loginUser } from '../Redux/Slices/authSlice';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle, Loader2 } from 'lucide-react';
 
 import type { User, ApiResponse } from '../types';
 
@@ -91,60 +94,67 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 text-gray-900">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-sm border border-gray-100">
-        <div>
-          <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900 tracking-tight">
+    <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4 text-gray-900">
+      <Card className="w-full max-w-md shadow-lg border-gray-200">
+        <CardHeader className="text-center space-y-1">
+          <CardTitle className="text-3xl font-extrabold tracking-tight text-gray-900">
             Sign in to Torent
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          </CardTitle>
+          <CardDescription className="text-gray-500">
             Enter your credentials to access your dashboard
-          </p>
-        </div>
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-4">
+              <FormField label="Email Address">
+                <Input
+                  type="email"
+                  required
+                  placeholder="admin@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
+                />
+              </FormField>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4 rounded-md shadow-sm p-4">
-            <FormField label="Email Address">
-              <Input
-                type="email"
-                required
-                placeholder="admin@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
-              />
-            </FormField>
-
-            <FormField label="Password">
-              <Input
-                type="password"
-                required
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
-              />
-            </FormField>
-          </div>
-
-          {errorMsg && (
-            <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md border border-red-100">
-              {errorMsg}
+              <FormField label="Password">
+                <Input
+                  type="password"
+                  required
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                />
+              </FormField>
             </div>
-          )}
 
-          <div>
+            {errorMsg && (
+              <Alert variant="destructive" className="bg-red-50 border-red-200 text-red-800">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{errorMsg}</AlertDescription>
+              </Alert>
+            )}
+
             <Button
               type="submit"
-              variant="primary"
-              className="w-full flex justify-center py-2.5 shadow-sm text-base"
-              isLoading={isLoading}
+              variant="default"
+              className="w-full h-11 text-base font-semibold transition-all hover:shadow-md"
+              disabled={isLoading}
             >
-              Sign in
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                'Sign in'
+              )}
             </Button>
-          </div>
-        </form>
-      </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 };

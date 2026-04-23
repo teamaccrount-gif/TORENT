@@ -2,23 +2,40 @@ import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { PERMISSIONS, ALL_TECHNICAL_TABLES, TABLE_LEVELS } from '../../config/permissions';
-import { canViewTableAtLevel } from '../../utils/registrationHelpers';
+import { canViewTableAtLevel, getEffectiveLevel } from '../../utils/registrationHelpers';
 import { 
   DashboardOutlined, 
   HistoryOutlined, 
   UserAddOutlined, 
   TeamOutlined, 
-  TableOutlined 
+  TableOutlined,
+  GlobalOutlined,
 } from '@ant-design/icons';
+import { ChevronRight } from 'lucide-react';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarSeparator,
+  SidebarTrigger,
+} from '@/components/ui/sidebar';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
-export const Sidebar: React.FC = () => {
+export const AppSidebar: React.FC = () => {
   const { user } = useAuth();
   const location = useLocation();
 
   if (!user) return null;
 
   const role = user.role.toLowerCase() as keyof typeof PERMISSIONS;
-  const level = user.level;
+  const level = getEffectiveLevel(user);
   const perms = PERMISSIONS[role];
 
   if (!perms) {
@@ -26,100 +43,130 @@ export const Sidebar: React.FC = () => {
     return null;
   }
 
-  const isFilterActive = location.pathname.startsWith('/filters');
-
-  const allowedTables = ALL_TECHNICAL_TABLES.filter(tableSlug => {
+  const allowedTables = ALL_TECHNICAL_TABLES.filter((tableSlug) => {
     const tableLevel = TABLE_LEVELS[tableSlug];
     return tableLevel && canViewTableAtLevel(level, tableLevel);
   });
 
-  return (
-    <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex md:flex-col shrink-0 overflow-y-auto">
-      <div className="h-16 flex items-center px-6 border-b border-gray-200 shrink-0">
-        <span className="text-xl font-bold text-blue-600 tracking-tight italic">Torent</span>
-      </div>
-      x 
-      <div className="flex-1 px-4 py-6 space-y-8">
-        {/* Main Navigation */}
-        <nav className="space-y-1">
-          <p className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Main</p>
-          {perms.canAccessDashboard && (
-            <NavLink
-              to="/dashboard"
-              className={({ isActive }) =>
-                `flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
-                }`
-              }
-            >
-              <DashboardOutlined className="mr-3" /> Dashboard
-            </NavLink>
-          )}
-          {perms.canAccessFilters && (
-            <NavLink
-              to="/filters/raw"
-              className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                isFilterActive ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              <HistoryOutlined className="mr-3" /> History Data
-            </NavLink>
-          )}
-        </nav>
+  const isFilterActive = location.pathname.startsWith('/filters');
 
-        {/* Technical Inventory (Tables) */}
+  return (
+    <Sidebar collapsible="icon">
+      <SidebarHeader className="h-16 flex flex-row items-center justify-between px-4">
+        <div className="flex items-center gap-2 overflow-hidden group-data-[collapsible=icon]:hidden">
+          <span className="text-xl font-bold text-blue-600 tracking-tight italic">Torent</span>
+        </div>
+        <SidebarTrigger className="ml-auto" />
+      </SidebarHeader>
+
+      <SidebarContent>
+        {/* Main Navigation */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Main</SidebarGroupLabel>
+          <SidebarMenu>
+            {perms.canAccessDashboard && (
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Dashboard" isActive={location.pathname === '/dashboard'}>
+                  <NavLink to="/dashboard">
+                    <DashboardOutlined />
+                    <span>Dashboard</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
+            {perms.canAccessFilters && (
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="History Data" isActive={isFilterActive}>
+                  <NavLink to="/filters/raw">
+                    <HistoryOutlined />
+                    <span>History Data</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
+            {perms.canAccessDashboard && (
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Map View" isActive={location.pathname === '/map'}>
+                  <NavLink to="/map">
+                    <GlobalOutlined />
+                    <span>Map View</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
+          </SidebarMenu>
+        </SidebarGroup>
+
+        <SidebarSeparator />
+
+        {/* Technical Inventory */}
         {allowedTables.length > 0 && (
-          <nav className="space-y-1">
-            <p className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Technical Inventory</p>
-            <div className="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-              {allowedTables.map((table) => (
-                <NavLink
-                  key={table}
-                  to={`/tables/${table}`}
-                  className={({ isActive }) =>
-                    `flex items-center px-3 py-2 rounded-md text-xs font-medium transition-colors ${
-                      isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-100'
-                    }`
-                  }
-                >
-                  <TableOutlined className="mr-3 opacity-70" /> {table.toUpperCase()}
-                </NavLink>
-              ))}
-            </div>
-          </nav>
+          <SidebarGroup>
+            <Collapsible defaultOpen className="group/collapsible">
+              <SidebarGroupLabel asChild>
+                <CollapsibleTrigger className="flex w-full items-center cursor-pointer hover:text-foreground transition-colors">
+                  Technical Inventory
+                  <ChevronRight className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                </CollapsibleTrigger>
+              </SidebarGroupLabel>
+              <CollapsibleContent>
+                <SidebarMenu>
+                  {allowedTables.map((table) => (
+                    <SidebarMenuItem key={table}>
+                      <SidebarMenuButton asChild tooltip={table.toUpperCase()} isActive={location.pathname === `/tables/${table}`}>
+                        <NavLink to={`/tables/${table}`}>
+                          <TableOutlined className="opacity-70" />
+                          <span>{table.toUpperCase()}</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </CollapsibleContent>
+            </Collapsible>
+          </SidebarGroup>
         )}
+
+        <SidebarSeparator />
 
         {/* Administration */}
         {(perms.canManage || perms.canCreate) && (
-          <nav className="space-y-1">
-            <p className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Administration</p>
-            {perms.canManage && (
-              <NavLink
-                to="/manage"
-                className={({ isActive }) =>
-                  `flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
-                  }`
-                }
-              >
-                <TeamOutlined className="mr-3" /> Manage Users
-              </NavLink>
-            )}
-            {perms.canCreate && (
-              <NavLink
-                to="/register"
-                className={({ isActive }) =>
-                  `flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100'
-                  }`
-                }
-              >
-                <UserAddOutlined className="mr-3" /> Register User
-              </NavLink>
-            )}
-          </nav>
+          <SidebarGroup>
+            <SidebarGroupLabel>Administration</SidebarGroupLabel>
+            <SidebarMenu>
+              {perms.canManage && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip="Manage Users" isActive={location.pathname.startsWith('/manage')}>
+                    <NavLink to="/manage">
+                      <TeamOutlined />
+                      <span>Manage Users</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+              {perms.canCreate && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip="Register User" isActive={location.pathname === '/register'}>
+                    <NavLink to="/register">
+                      <UserAddOutlined />
+                      <span>Register User</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+            </SidebarMenu>
+          </SidebarGroup>
         )}
-      </div>
-    </aside>
+      </SidebarContent>
+
+      <SidebarFooter className="border-t p-4">
+        {user && (
+          <div className="flex flex-col gap-1 overflow-hidden group-data-[collapsible=icon]:hidden">
+            <p className="text-xs font-medium text-foreground truncate">{user.email}</p>
+            <p className="text-[10px] text-muted-foreground uppercase">{role}</p>
+          </div>
+        )}
+      </SidebarFooter>
+    </Sidebar>
   );
 };

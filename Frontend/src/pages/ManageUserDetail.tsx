@@ -2,15 +2,32 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../Redux/Store';
 import { fetchUserDetail, updateUser, toggleUserStatus } from '../Redux/Slices/manageSlice';
-import { fetchRoles, fetchRegions, fetchAreas, fetchRegistrationStations } from '../Redux/Slices/registrationSlice';
+import {
+  fetchRegions,
+  fetchRoles,
+  fetchAreasByRegion,
+  fetchStationsByArea,
+} from '../Redux/Slices/registrationSlice';
 import { normalizeRoles, normalizeRegions, normalizeAreas, normalizeStations } from '../utils/registrationHelpers';
-import { FormField } from '../components/ui/FormField';
-import { Input } from '../components/ui/Input';
-import { Dropdown } from '../components/ui/Dropdown';
-import { Button } from '../components/ui/Button';
-import { RoleBadge, StatusBadge } from '../components/ui/Badge';
-import { Spinner } from '../components/ui/Spinner';
-import { Modal } from '../components/ui/Modal';
+import { FormField } from '../components/ui/formfield';
+import { Input } from '../components/ui/input';
+import { Dropdown } from '../components/ui/dropdown';
+import { Button } from '../components/ui/button';
+import { Badge, RoleBadge, StatusBadge } from '../components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Loader2, AlertCircle, CheckCircle2, ArrowLeft } from 'lucide-react';
 import type { ManageableUser, ApiResponse } from '../types';
 
 const ManageUserDetail: React.FC = () => {
@@ -21,47 +38,68 @@ const ManageUserDetail: React.FC = () => {
   const response = useAppSelector((state) => state.manageSlice.data.fetchUserDetail) as ApiResponse<ManageableUser> | null;
   const loadingState = useAppSelector((state) => state.manageSlice.loading.fetchUserDetail);
 
-  const [phone, setPhone] = useState('');
+  // Edit form state
   const [isEditing, setIsEditing] = useState(false);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [savingMsg, setSavingMsg] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [isActive, setIsActive] = useState(true);
-  const [selectedRegion, setSelectedRegion] = useState('');
-  const [selectedArea, setSelectedArea] = useState('');
-  const [selectedStation, setSelectedStation] = useState('');
 
-  const rolesResponse = useAppSelector(state => state.registrationSlice.data.fetchRoles);
-  const regionsResponse = useAppSelector(state => state.registrationSlice.data.fetchRegions);
-  const areasResponse = useAppSelector(state => state.registrationSlice.data.fetchAreas);
-  const stationsResponse = useAppSelector(state => state.registrationSlice.data.fetchRegistrationStations);
+  // Dropdown selections — store NAMES
+  const [selectedRoleName, setSelectedRoleName] = useState('');
+  const [selectedRegionName, setSelectedRegionName] = useState('');
+  const [selectedAreaName, setSelectedAreaName] = useState('');
+  const [selectedStationName, setSelectedStationName] = useState('');
 
-  const roles = useMemo(() => normalizeRoles(rolesResponse), [rolesResponse]);
+  // Redux selectors
+  const regionsResponse = useAppSelector((s) => s.registrationSlice.data.fetchRegions);
+  const rolesResponse = useAppSelector((s) => s.registrationSlice.data.fetchRoles);
+  const areasResponse = useAppSelector((s) => s.registrationSlice.data.fetchAreasByRegion);
+  const stationsResponse = useAppSelector((s) => s.registrationSlice.data.fetchStationsByArea);
+
+  const regionsLoading = useAppSelector((s) => s.registrationSlice.loading.fetchRegions);
+  const rolesLoading = useAppSelector((s) => s.registrationSlice.loading.fetchRoles);
+  const areasLoading = useAppSelector((s) => s.registrationSlice.loading.fetchAreasByRegion);
+  const stationsLoading = useAppSelector((s) => s.registrationSlice.loading.fetchStationsByArea);
+
   const regions = useMemo(() => normalizeRegions(regionsResponse), [regionsResponse]);
+  const roles = useMemo(() => normalizeRoles(rolesResponse), [rolesResponse]);
   const areas = useMemo(() => normalizeAreas(areasResponse), [areasResponse]);
   const stations = useMemo(() => normalizeStations(stationsResponse), [stationsResponse]);
 
+  // Fetch user detail on mount
   useEffect(() => {
     if (userId) {
       dispatch(fetchUserDetail({ method: 'GET', params: { userId } }));
     }
   }, [dispatch, userId]);
 
+  // Fetch dropdown data when editing starts
   useEffect(() => {
-    if (isEditing) {
-       dispatch(fetchRoles());
-       dispatch(fetchRegions());
-       dispatch(fetchAreas());
-       dispatch(fetchRegistrationStations());
-    }
+    if (!isEditing) return;
+    dispatch(fetchRoles({ method: 'GET' }));
+    dispatch(fetchRegions({ method: 'GET' }));
   }, [dispatch, isEditing]);
 
+  // Cascading fetch: areas when region changes
+  useEffect(() => {
+    if (!isEditing || !selectedRegionName) return;
+    dispatch(fetchAreasByRegion({ method: 'GET', urlParam: selectedRegionName }));
+  }, [dispatch, selectedRegionName, isEditing]);
+
+  // Cascading fetch: stations when area changes
+  useEffect(() => {
+    if (!isEditing || !selectedAreaName) return;
+    dispatch(fetchStationsByArea({ method: 'GET', urlParam: selectedAreaName }));
+  }, [dispatch, selectedAreaName, isEditing]);
+
+  // Sync form fields from loaded user data
   useEffect(() => {
     if (response?.data && String(response.data.id) === userId) {
       const u = response.data;
@@ -70,22 +108,13 @@ const ManageUserDetail: React.FC = () => {
       setEmail(u.email || '');
       setPhone(u.phone || '');
       setIsActive(u.is_active ?? u.isActive ?? true);
-      
-      const roleName = typeof u.role === 'object' ? u.role.name : u.role;
-      const roleObj = roles.find(r => r.role_name === roleName);
-      setRole(roleObj?.role_id || '');
-      
-      if (u.access) {
-         const regionObj = regions.find(r => r.region_name === u.access?.regions?.[0]);
-         const areaObj = areas.find(a => a.area_name === u.access?.areas?.[0]);
-         const stationObj = stations.find(s => s.station_name === u.access?.stations?.[0]);
-
-         setSelectedRegion(regionObj?.region_id || '');
-         setSelectedArea(areaObj?.area_id || '');
-         setSelectedStation(stationObj?.station_id || '');
-      }
+      const roleName = typeof u.role === 'object' ? (u.role as any).name : u.role;
+      setSelectedRoleName(String(roleName || ''));
+      setSelectedRegionName(u.access?.regions?.[0] || '');
+      setSelectedAreaName(u.access?.areas?.[0] || '');
+      setSelectedStationName(u.access?.stations?.[0] || '');
     }
-  }, [response, userId, roles, regions, areas, stations]);
+  }, [response, userId]);
 
   const isLoading = loadingState === 'pending';
   const user = response?.data;
@@ -95,30 +124,26 @@ const ManageUserDetail: React.FC = () => {
     setIsSaving(true);
     setSavingMsg('');
 
-    const selectedRegionName = regions.find(r => r.region_id === selectedRegion)?.region_name;
-    const selectedAreaName = areas.find(a => a.area_id === selectedArea)?.area_name;
-    const selectedStationName = stations.find(s => s.station_id === selectedStation)?.station_name;
-
-    console.log(role)
+    const roleObj = roles.find((r) =>
+      r.role_name.toLowerCase() === selectedRoleName.toLowerCase()
+    );
 
     const resultAction = await dispatch(updateUser({
       method: 'PUT',
-      payload: { 
-        userId, 
+      payload: {
+        userId,
         email,
-        role_id: Number(role),
-        first_name: firstName, 
-        last_name: lastName, 
+        role_id: roleObj ? Number(roleObj.role_id) : undefined,
+        first_name: firstName,
+        last_name: lastName,
         phone,
         is_active: isActive,
         regions: selectedRegionName ? [selectedRegionName] : [],
         areas: selectedAreaName ? [selectedAreaName] : [],
         stations: selectedStationName ? [selectedStationName] : [],
-        ...(password.trim() ? { password } : {})
+        ...(password.trim() ? { password } : {}),
       }
     }));
-
-    console.log('result action', resultAction)
 
     if (updateUser.fulfilled.match(resultAction)) {
       setSavingMsg('Profile updated successfully.');
@@ -151,239 +176,267 @@ const ManageUserDetail: React.FC = () => {
     setIsSaving(false);
   };
 
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setSavingMsg('');
+    if (user) {
+      setFirstName(user.first_name || '');
+      setLastName(user.last_name || '');
+      setEmail(user.email || '');
+      setPhone(user.phone || '');
+      setIsActive(user.is_active ?? user.isActive ?? true);
+      const roleName = typeof user.role === 'object' ? (user.role as any).name : user.role;
+      setSelectedRoleName(String(roleName || ''));
+      setSelectedRegionName(user.access?.regions?.[0] || '');
+      setSelectedAreaName(user.access?.areas?.[0] || '');
+      setSelectedStationName(user.access?.stations?.[0] || '');
+    }
+  };
+
   if (isLoading && !user) {
-    return <div className="flex justify-center p-12"><Spinner className="w-8 h-8 text-blue-600" /></div>;
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-3">
+        <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
+        <p className="text-muted-foreground animate-pulse">Loading profile details...</p>
+      </div>
+    );
   }
 
   if (!user && !isLoading) {
-    return <div className="text-red-600 p-6 bg-red-50 rounded-md">User not found or access denied.</div>;
+    return (
+      <Alert variant="destructive" className="max-w-xl mx-auto mt-10">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>User not found or access denied.</AlertDescription>
+      </Alert>
+    );
   }
 
   if (!user) return null;
 
+  const roleOptions = roles.map((r) => ({ value: r.role_name, label: r.role_name }));
+  const regionOptions = regions.map((r) => ({ value: r.region_name, label: r.region_name }));
+  const areaOptions = areas.map((a) => ({ value: a.area_name, label: a.area_name }));
+  const stationOptions = stations.map((s) => ({ value: s.station_name, label: s.station_name }));
+
+  const isSuccess = savingMsg.toLowerCase().includes('success');
+
   return (
-    <div className="space-y-6 max-w-4xl">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8 max-w-5xl animate-in fade-in slide-in-from-bottom-2 duration-500 pb-10">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">User Profile</h1>
-          <p className="mt-1 text-sm text-gray-500">Manage specific details and access for {user.email}.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">User Profile</h1>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Operational details and hierarchical access for <span className="font-semibold text-gray-900">{user.email}</span>.
+          </p>
         </div>
-        <Button variant="secondary" onClick={() => navigate('/manage')}>Back to List</Button>
-      </div>
-
-      {savingMsg && (
-        <div className={`p-4 rounded-md text-sm ${savingMsg.includes('success') ? 'bg-green-50 text-green-800 border border-green-100' : 'bg-red-50 text-red-800 border border-red-100'}`}>
-          {savingMsg}
-        </div>
-      )}
-
-      <div className="bg-white shadow-sm overflow-hidden sm:rounded-lg border border-gray-200">
-        <div className="px-4 py-5 sm:px-6 flex justify-between items-center bg-gray-50 border-b border-gray-200">
-          <div>
-            <h3 className="text-lg leading-6 font-medium text-gray-900">Account Overview</h3>
-          </div>
-          <div className="flex items-center space-x-3">
-            <RoleBadge role={user.role} />
-            <StatusBadge isActive={!!user.is_active} />
-          </div>
-        </div>
-        <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
-          <dl className="sm:divide-y sm:divide-gray-200">
-            <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">Email address</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{user.email}</dd>
-            </div>
-            {user.assignedCities && user.assignedCities.length > 0 && (
-              <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 bg-gray-50">
-                <dt className="text-sm font-medium text-gray-500">Assigned Cities</dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  {user.assignedCities.map(c => c.city_name).join(', ')}
-                </dd>
-              </div>
-            )}
-            {user.assignedStation && (
-              <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 bg-gray-50">
-                <dt className="text-sm font-medium text-gray-500">Assigned Station</dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{user.assignedStation.station_name}</dd>
-              </div>
-            )}
-          </dl>
-        </div>
-      </div>
-
-      <div className="bg-white shadow-sm sm:rounded-lg border border-gray-200 p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">Edit Details</h3>
-          {!isEditing && <Button variant="secondary" onClick={() => setIsEditing(true)}>Edit</Button>}
-        </div>
-        <form onSubmit={handleUpdate} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <FormField label='First Name'>
-              <Input
-                type="text"
-                required
-                placeholder="First Name"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                disabled={!isEditing || isSaving}
-              />
-            </FormField>
-            <FormField label='Last Name'>
-              <Input
-                type="text"
-                required
-                placeholder="Last Name"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                disabled={!isEditing || isSaving}
-              />
-            </FormField>
-            <FormField label="Email Address">
-              <Input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={!isEditing || isSaving}
-                placeholder="email@example.com"
-              />
-            </FormField>
-            <FormField label="Phone Number">
-              <Input
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                disabled={!isEditing || isSaving}
-                placeholder="+91..."
-                type="tel"
-              />
-            </FormField>
-            <FormField label="Role">
-              <Dropdown
-                options={roles.map((r) => ({ value: r.role_id, label: r.role_name }))}
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                disabled={!isEditing || isSaving}
-                placeholder="Select Role"
-              />
-            </FormField>
-            <FormField label="Region">
-              <Dropdown
-                options={regions.map((r) => ({ value: r.region_id, label: r.region_name }))}
-                value={selectedRegion}
-                onChange={(e) => {
-                  setSelectedRegion(e.target.value);
-                  setSelectedArea('');
-                  setSelectedStation('');
-                }}
-                disabled={!isEditing || isSaving}
-                placeholder="Select Region"
-              />
-            </FormField>
-            <FormField label="Area/City">
-              <Dropdown
-                options={areas
-                  .filter((a) => {
-                    if (!selectedRegion) return false;
-                    const region = regions.find(r => r.region_id === selectedRegion);
-                    return region && a.region_name.toLowerCase() === region.region_name.toLowerCase();
-                  })
-                  .map((a) => ({ value: a.area_id, label: a.area_name }))}
-                value={selectedArea}
-                onChange={(e) => {
-                  setSelectedArea(e.target.value);
-                  setSelectedStation('');
-                }}
-                disabled={!isEditing || isSaving || !selectedRegion}
-                placeholder="Select Area"
-              />
-            </FormField>
-            <FormField label="Station">
-              <Dropdown
-                options={stations
-                  .filter((s) => {
-                    if (!selectedArea) return false;
-                    const area = areas.find(a => a.area_id === selectedArea);
-                    return area && s.area_name.toLowerCase() === area.area_name.toLowerCase();
-                  })
-                  .map((s) => ({ value: s.station_id, label: s.station_name }))}
-                value={selectedStation}
-                onChange={(e) => setSelectedStation(e.target.value)}
-                disabled={!isEditing || isSaving || !selectedArea}
-                placeholder="Select Station"
-              />
-            </FormField>
-            <FormField label="New Password (Optional)">
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={!isEditing || isSaving}
-                placeholder="••••••••"
-              />
-            </FormField>
-            <div className="flex items-center space-x-3 pt-6">
-              <input
-                type="checkbox"
-                id="isActive"
-                checked={isActive}
-                onChange={(e) => setIsActive(e.target.checked)}
-                disabled={!isEditing || isSaving}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded transition-colors"
-              />
-              <label htmlFor="isActive" className="text-sm font-medium text-gray-700">Account Active</label>
-            </div>
-          </div>
-          {isEditing && (
-            <div className="flex justify-end space-x-3 pt-2">
-              <Button type="button" variant="secondary" onClick={() => { 
-                setIsEditing(false); 
-                setFirstName(user.first_name || ''); 
-                setLastName(user.last_name || ''); 
-                setEmail(user.email || '');
-                setPhone(user.phone || ''); 
-                setIsActive(user.is_active ?? user.isActive ?? true);
-                const roleName = typeof user.role === 'object' ? user.role.name : user.role;
-                const roleObj = roles.find(r => r.role_name === roleName);
-                setRole(roleObj?.role_id || '');
-                if (user.access) {
-                  const regionObj = regions.find(r => r.region_name === user.access?.regions?.[0]);
-                  const areaObj = areas.find(a => a.area_name === user.access?.areas?.[0]);
-                  const stationObj = stations.find(s => s.station_name === user.access?.stations?.[0]);
-                  setSelectedRegion(regionObj?.region_id || '');
-                  setSelectedArea(areaObj?.area_id || '');
-                  setSelectedStation(stationObj?.station_id || '');
-                }
-              }} disabled={isSaving}>Cancel</Button>
-              <Button type="submit" variant="primary" isLoading={isSaving}>Save Changes</Button>
-            </div>
-          )}
-        </form>
-      </div>
-
-      <div className="bg-red-50 sm:rounded-lg border border-red-100 p-6">
-        <h3 className="text-lg leading-6 font-medium text-red-800 mb-2">Danger Zone</h3>
-        <p className="text-sm text-red-600 mb-4">
-          {user.isActive
-            ? "Deactivating an account immediately blocks the user's access. It can be reversed later."
-            : "Reactivating an account instantly restores the user's previously granted access."}
-        </p>
-        <Button variant={user.isActive ? 'danger' : 'primary'} onClick={() => setIsModalOpen(true)} disabled={isSaving}>
-          {user.isActive ? 'Deactivate Account' : 'Reactivate Account'}
+        <Button variant="outline" onClick={() => navigate('/manage')} className="w-fit">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to List
         </Button>
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={() => !isSaving && setIsModalOpen(false)} title="Confirm Status Change">
-        <p className="mb-6 py-2">
-          Are you sure you want to {user.isActive ? 'deactivate' : 'reactivate'} the account for <strong className="text-gray-900">{user.email}</strong>?
-        </p>
-        <div className="flex justify-end space-x-3 w-full">
-          <Button variant="secondary" onClick={() => setIsModalOpen(false)} disabled={isSaving}>Cancel</Button>
-          <Button variant={user.isActive ? 'danger' : 'primary'} onClick={handleToggleStatus} isLoading={isSaving}>
-            Confirm {user.isActive ? 'Deactivation' : 'Reactivation'}
-          </Button>
-        </div>
-      </Modal>
+      {savingMsg && (
+        <Alert className={`animate-in zoom-in duration-300 ${isSuccess ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'}`}>
+          {isSuccess ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+          <AlertDescription>{savingMsg}</AlertDescription>
+        </Alert>
+      )}
 
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+          {/* Main Account Details */}
+          <Card className="border-gray-200 shadow-sm overflow-hidden">
+            <CardHeader className="bg-gray-50/50 border-b border-gray-100 flex flex-row items-center justify-between py-4">
+              <div>
+                <CardTitle className="text-lg font-semibold">Account Details</CardTitle>
+                <CardDescription>Primary identification and identity information.</CardDescription>
+              </div>
+              {!isEditing && (
+                <Button variant="default" size="sm" onClick={() => setIsEditing(true)}>
+                  Edit Profile
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent className="pt-6">
+              <form onSubmit={handleUpdate} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                  <FormField label="First Name">
+                    <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} required disabled={!isEditing || isSaving} placeholder="First Name" />
+                  </FormField>
+                  <FormField label="Last Name">
+                    <Input value={lastName} onChange={(e) => setLastName(e.target.value)} required disabled={!isEditing || isSaving} placeholder="Last Name" />
+                  </FormField>
+                  <FormField label="Email Address">
+                    <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={!isEditing || isSaving} placeholder="email@example.com" />
+                  </FormField>
+                  <FormField label="Phone Number">
+                    <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} disabled={!isEditing || isSaving} placeholder="+91..." />
+                  </FormField>
+                  <FormField label="New Password (Optional)">
+                    <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} disabled={!isEditing || isSaving} placeholder="Leave blank to keep current" />
+                  </FormField>
+                </div>
+
+                <div className="space-y-4 border-t border-gray-100 pt-6">
+                  <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Access Configuration</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                    <FormField label="Role">
+                      <Dropdown
+                        options={roleOptions}
+                        value={selectedRoleName}
+                        onChange={(e) => setSelectedRoleName(e.target.value)}
+                        isLoading={rolesLoading === 'pending'}
+                        disabled={!isEditing || isSaving}
+                        placeholder="Select Role"
+                      />
+                    </FormField>
+                    <FormField label="Region">
+                      <Dropdown
+                        options={regionOptions}
+                        value={selectedRegionName}
+                        onChange={(e) => {
+                          setSelectedRegionName(e.target.value);
+                          setSelectedAreaName('');
+                          setSelectedStationName('');
+                        }}
+                        isLoading={regionsLoading === 'pending'}
+                        disabled={!isEditing || isSaving}
+                        placeholder="Select Region"
+                      />
+                    </FormField>
+                    <FormField label="Area / City">
+                      <Dropdown
+                        options={areaOptions}
+                        value={selectedAreaName}
+                        onChange={(e) => {
+                          setSelectedAreaName(e.target.value);
+                          setSelectedStationName('');
+                        }}
+                        isLoading={areasLoading === 'pending'}
+                        disabled={!isEditing || isSaving || !selectedRegionName}
+                        placeholder={areasLoading === 'pending' ? 'Loading areas...' : 'Select Area'}
+                      />
+                    </FormField>
+                    <FormField label="Station">
+                      <Dropdown
+                        options={stationOptions}
+                        value={selectedStationName}
+                        onChange={(e) => setSelectedStationName(e.target.value)}
+                        isLoading={stationsLoading === 'pending'}
+                        disabled={!isEditing || isSaving || !selectedAreaName}
+                        placeholder={stationsLoading === 'pending' ? 'Loading stations...' : 'Select Station'}
+                      />
+                    </FormField>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                  <Checkbox
+                    id="isActive"
+                    checked={isActive}
+                    onCheckedChange={(checked) => setIsActive(!!checked)}
+                    disabled={!isEditing || isSaving}
+                  />
+                  <div className="grid gap-1.5 leading-none">
+                    <label
+                      htmlFor="isActive"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      Account Active
+                    </label>
+                    <p className="text-xs text-muted-foreground">
+                      Enable or disable login access for this user.
+                    </p>
+                  </div>
+                </div>
+
+                {isEditing && (
+                  <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                    <Button type="button" variant="outline" onClick={handleCancelEdit} disabled={isSaving}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" variant="default" disabled={isSaving || rolesLoading === 'pending'}>
+                      {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Save Changes
+                    </Button>
+                  </div>
+                )}
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-8">
+          {/* Sidebar Info Card */}
+          <Card className="border-gray-200 shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-sm font-semibold uppercase tracking-wider text-gray-500">Status Snapshot</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Current Role</span>
+                <RoleBadge role={user.role} />
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">System Status</span>
+                <StatusBadge isActive={!!user.is_active} />
+              </div>
+              <div className="pt-4 border-t border-gray-100">
+                <p className="text-xs text-muted-foreground mb-1 font-medium">Jurisdiction Overview</p>
+                <div className="bg-gray-50 p-3 rounded text-xs text-gray-700 italic leading-relaxed">
+                  {user.access?.regions?.length ? `Regions: ${user.access.regions.join(', ')}` : 'No Region Restriction'}
+                  {user.access?.areas?.length ? `\nAreas: ${user.access.areas.join(', ')}` : ''}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Danger Zone */}
+          <Card className="border-red-100 bg-red-50/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-red-800 text-base font-semibold">Danger Zone</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-xs text-red-600 leading-relaxed">
+                {user.isActive
+                  ? "Deactivating an account immediately blocks the user's access. It can be reversed later."
+                  : "Reactivating an account instantly restores the user's previously granted access."}
+              </p>
+              <Button 
+                variant={user.isActive ? 'destructive' : 'default'} 
+                className="w-full"
+                onClick={() => setIsModalOpen(true)} 
+                disabled={isSaving}
+              >
+                {user.isActive ? 'Deactivate Account' : 'Reactivate Account'}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <AlertDialog open={isModalOpen} onOpenChange={(open) => !open && !isSaving && setIsModalOpen(false)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Status Change</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to <span className="font-semibold text-foreground">{user.isActive ? 'deactivate' : 'reactivate'}</span> the account for{' '}
+              <span className="font-semibold text-foreground">{user.email}</span>?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSaving}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={(e) => { e.preventDefault(); handleToggleStatus(); }} 
+              variant={user.isActive ? 'destructive' : 'default'}
+              disabled={isSaving}
+            >
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Confirm {user.isActive ? 'Deactivation' : 'Reactivation'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
