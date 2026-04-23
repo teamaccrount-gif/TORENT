@@ -1,11 +1,6 @@
 import express from "express";
 
-<<<<<<< HEAD
 import { generateId } from "../middlewares/generateid.js";
-=======
-
-import { generateId } from "../middlewares/filter.generateid.js";
->>>>>>> parent of 3b9f106 (Revert "make api for all region, area, station")
 import { authenticate } from "../middlewares/authenticate.js";
 import { applyLevelAccess } from "../middlewares/levelAccess.js";
 import {
