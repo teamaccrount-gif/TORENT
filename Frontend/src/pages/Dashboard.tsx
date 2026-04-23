@@ -86,6 +86,15 @@ const Dashboard: React.FC = () => {
             </CardContent>
           </Card>
         )}
+        <div className="bg-white shadow-sm sm:rounded-lg border border-gray-200 p-6 flex flex-col items-start transition ease-in-out hover:shadow-md">
+          <h2 className="text-lg font-medium text-gray-900">Data Analytics</h2>
+          <p className="mt-1 text-sm text-gray-500 flex-1">
+            Access the telemetry filters and review precise data sets across raw, aggregated, and delta modes.
+          </p>
+          <Button variant="primary" className="mt-4" onClick={() => navigate('/filters/raw')}>
+            View Data
+          </Button>
+        </div>
 
         {['super_admin', 'super admin', 'admin'].includes(role) && (
           <Card className="flex flex-col hover:shadow-md transition-all duration-300 border-gray-200">
@@ -119,7 +128,10 @@ const Dashboard: React.FC = () => {
               </Badge>
             </CardContent>
           </Card>
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> d01ad7c (feat: add role-based dashboard page with navigation and status monitoring)
           <div className="bg-white shadow-sm sm:rounded-lg border border-gray-200 p-6 flex flex-col items-start transition ease-in-out hover:shadow-md">
             <h2 className="text-lg font-medium text-gray-900">System Status</h2>
             <p className="mt-1 text-sm text-gray-500 flex-1">
@@ -129,7 +141,10 @@ const Dashboard: React.FC = () => {
                Connection Stable
             </div>
           </div>
+<<<<<<< HEAD
 >>>>>>> 3cd2829 (Revert "feat: implement telemetry visualization component and initialize interactive map module")
+=======
+>>>>>>> d01ad7c (feat: add role-based dashboard page with navigation and status monitoring)
         )}
       </div>
     </div>
