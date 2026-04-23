@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate, Outlet, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { PERMISSIONS, TABLE_LEVELS } from '../../config/permissions';
-import { canViewTableAtLevel } from '../../utils/registrationHelpers';
+import { canViewTableAtLevel, getEffectiveLevel } from '../../utils/registrationHelpers';
 import type { Role } from '../../types';
 
 export const ProtectedRoute: React.FC<{ action?: keyof typeof PERMISSIONS[Role] | 'allowedTables' }> = ({ action }) => {
@@ -15,7 +15,7 @@ export const ProtectedRoute: React.FC<{ action?: keyof typeof PERMISSIONS[Role] 
   }
 
   const role = user.role.toLowerCase() as Role;
-  const level = user.level;
+  const level = getEffectiveLevel(user);
   const permissions = PERMISSIONS[role];
 
   if (!permissions) {

@@ -59,3 +59,46 @@ export const createCommonAsyncThunk = (
       },
     }
   );
+
+/**
+ * Creates a reusable async thunk for API calls with a DYNAMIC URL.
+ * The caller provides a URL builder function instead of a static URL.
+ *
+ * USAGE:
+ *
+ * // Step 1 — define the thunk in your slice file
+ * export const fetchAreasByRegion = createDynamicAsyncThunk(
+ *   "fetchAreasByRegion",
+ *   (options) => `${API_URLS.AREA_DROPDOWN.replace(':region', options?.urlParam ?? '')}`,
+ *   "registrationSlice",
+ * );
+ *
+ * // Step 2 — dispatch in your component with urlParam
+ * dispatch(fetchAreasByRegion({ method: "GET", urlParam: "r1" }));
+ *
+ * // Step 3 — read from state
+ * const areas = useAppSelector((state) => state.registrationSlice.data.fetchAreasByRegion);
+ */
+
+export interface DynamicRequestOptions extends RequestOptions {
+  urlParam?: string;
+}
+
+export const createDynamicAsyncThunk = (
+  typePrefix: string,
+  urlBuilder: (options: DynamicRequestOptions | void) => string,
+  _sliceName?: string
+) =>
+  createAsyncThunk(
+    typePrefix,
+    async (options: DynamicRequestOptions | void, { rejectWithValue }) => {
+      try {
+        const url = urlBuilder(options);
+        const response = await commonRequest(url, options);
+        return response;
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : "Unknown error occurred";
+        return rejectWithValue(message);
+      }
+    }
+  );

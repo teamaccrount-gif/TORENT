@@ -1,5 +1,13 @@
-import React from 'react';
-import { Spinner } from './Spinner';
+import * as React from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./Select";
+import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Option {
   value: string;
@@ -13,37 +21,47 @@ export interface DropdownProps extends React.SelectHTMLAttributes<HTMLSelectElem
   placeholder?: string;
 }
 
-export const Dropdown = React.forwardRef<HTMLSelectElement, DropdownProps>(
-  ({ className = '', options, error, isLoading, disabled, placeholder = 'Select an option', ...props }, ref) => {
-    const baseClasses = 'block w-full px-3 py-2 border rounded-md shadow-sm sm:text-sm focus:outline-none focus:ring-1 disabled:bg-gray-50 disabled:text-gray-500 transition-colors bg-white';
-    const errorClasses = error
-      ? 'border-red-300 text-red-900 focus:ring-red-500 focus:border-red-500'
-      : 'border-gray-200 text-gray-900 focus:ring-blue-500 focus:border-blue-500';
+export const Dropdown = React.forwardRef<HTMLButtonElement, DropdownProps>(
+  ({ className = '', options, error, isLoading, disabled, placeholder = 'Select an option', value, onChange, ...props }, ref) => {
+    const handleValueChange = (val: string) => {
+      if (onChange) {
+        onChange({ target: { value: val } } as React.ChangeEvent<HTMLSelectElement>);
+      }
+    };
 
     return (
-      <div className="relative">
-        <select
+      <Select
+        value={value as string}
+        onValueChange={handleValueChange}
+        disabled={disabled || isLoading}
+      >
+        <SelectTrigger
           ref={ref}
-          disabled={disabled || isLoading}
-          className={`${baseClasses} ${errorClasses} ${className} ${isLoading ? 'pr-10' : ''}`}
-          {...props}
+          className={cn(
+            "w-full",
+            error && "border-destructive focus-visible:ring-destructive",
+            className
+          )}
         >
-          <option value="" disabled hidden>
-            {placeholder}
-          </option>
+          {isLoading ? (
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Loading...</span>
+            </div>
+          ) : (
+            <SelectValue placeholder={placeholder} />
+          )}
+        </SelectTrigger>
+        <SelectContent>
           {options.map((opt) => (
-            <option key={opt.value} value={opt.value}>
+            <SelectItem key={opt.value} value={opt.value}>
               {opt.label}
-            </option>
+            </SelectItem>
           ))}
-        </select>
-        {isLoading && (
-          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-blue-600">
-            <Spinner size="sm" />
-          </div>
-        )}
-      </div>
+        </SelectContent>
+      </Select>
     );
   }
 );
+
 Dropdown.displayName = 'Dropdown';

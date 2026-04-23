@@ -1,6 +1,6 @@
 import React from 'react';
-import { FormField } from '../../ui/FormField';
-import { Input, type InputProps } from '../../ui/Input';
+import { FormField } from '../../ui/formfield';
+import { Input, type InputProps } from '../../ui/input';
 
 interface EmailFieldProps extends InputProps {
   label?: string;

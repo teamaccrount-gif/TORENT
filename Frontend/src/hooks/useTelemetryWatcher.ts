@@ -18,8 +18,13 @@ let socket: Socket | null = null;
 
 const getSocket = (): Socket => {
   if (!socket) {
-    socket = io(import.meta.env.VITE_BACKEND_ENDPOINT, {
+    const token = localStorage.getItem('accessToken');
+    socket = io(import.meta.env.VITE_SOCKET_ENDPOINT, {
       autoConnect: false,
+      transports: ['websocket', 'polling'],
+      reconnectionAttempts: 5,
+      auth: { token },
+      extraHeaders: { Authorization: `Bearer ${token}` }
     });
   }
   return socket;

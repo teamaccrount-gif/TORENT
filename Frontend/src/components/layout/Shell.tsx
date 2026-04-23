@@ -1,20 +1,28 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
-import { Sidebar } from './Sidebar';
+import { Outlet, useLocation } from 'react-router-dom';
+import { AppSidebar } from './Sidebar';
 import { Navbar } from './Navbar';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 
 export const Shell: React.FC = () => {
+  const location = useLocation();
+  const isMapPage = location.pathname.startsWith('/map');
+
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden text-gray-900">
-      <Sidebar />
-      <div className="flex flex-col flex-1 w-full overflow-hidden">
+    <SidebarProvider className="h-svh overflow-hidden">
+      <AppSidebar />
+      <SidebarInset className="flex flex-col bg-gray-50 h-full min-h-0 overflow-hidden">
         <Navbar />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">
-          <div className="max-w-7xl mx-auto">
+        <main className={isMapPage ? 'relative flex-1 overflow-hidden h-full min-h-screen' : 'flex-1 overflow-y-auto p-4 md:p-6'}>
+          {isMapPage ? (
             <Outlet />
-          </div>
+          ) : (
+            <div className="max-w-7xl mx-auto">
+              <Outlet />
+            </div>
+          )}
         </main>
-      </div>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 };
